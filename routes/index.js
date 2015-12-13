@@ -7,7 +7,8 @@ router.get('/', function(req, res) {
 });
 
 router.post('/githook', function(req,res) {
-  console.log(req.body);  
+  console.log(req.body);
+  res.status(200).json('i got it');
 })
 
 module.exports = router;
