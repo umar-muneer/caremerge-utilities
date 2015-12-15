@@ -1,5 +1,7 @@
 var express = require('express');
 var router = express.Router();
+var Promise = require('bluebird')
+var eventHandlers = require('../eventHandlers');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -7,8 +9,8 @@ router.get('/', function(req, res) {
 });
 
 router.post('/githooks/push', function(req,res) {
-  console.log(req.body);
-  res.status(200).end();
+  eventHandlers.handlePushEvent(req.body);
+  res.end();
 });
 
 router.post('/githooks/pullrequest', function(req,res) {
