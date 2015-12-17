@@ -40,7 +40,7 @@ var pushEvent = function(payload) {
 module.exports.handlePushEvent = function(payload) {
   return pushEvent(payload).then(function(result) {
     var data = _.map(result, function(r) {
-      return {data: r};
+      return {data: _.extend(r, {statType: 'commit'})};
     });
     return App.models.statistics.bulkCreate(data);
   }).then(function() {
