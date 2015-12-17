@@ -33,8 +33,20 @@ var pushEvent = function(payload) {
   var commitDataPromises = _.map(distinctCommits, function(commit) {
     return _getCommitData(commit);
   });
-
   return Promise.all(commitDataPromises);
+};
+
+var pullRequestEvent = function(payload) {
+  return Promise.try(function() {
+    return {
+      author: payload.pull_request.user.login,
+      url: payload.pull_request.url,
+      action: payload.action,
+      state: payload.pull_request.state,
+      createdAt: payload.pull_request.created_at,
+      updatedAt: payload.pull_request.updated_at
+    };
+  });
 };
 
 module.exports.handlePushEvent = function(payload) {
@@ -51,7 +63,13 @@ module.exports.handlePushEvent = function(payload) {
 };
 
 module.exports.handlePullRequestEvent = function(payload) {
-  return Promise.resolve({});
+  return pullRequestEvent(payload).then(function(result) {
+    return App.models.statistics.create({
+      data: _.extend(result, {statType: 'pullrequest'})
+    });
+  }).catch(function(error) {
+    console.log('####', error, '####');
+  });
 };
 
 module.exports.output = output;

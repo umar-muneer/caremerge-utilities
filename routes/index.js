@@ -14,7 +14,7 @@ router.post('/githooks/push', function(req,res) {
 });
 
 router.post('/githooks/pullrequest', function(req,res) {
-  console.log(req.body);
+  eventHandlers.handlePullRequestEvent(req.body);
   res.status(200).end();
 });
 
