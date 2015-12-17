@@ -39,7 +39,12 @@ var pushEvent = function(payload) {
 
 module.exports.handlePushEvent = function(payload) {
   return pushEvent(payload).then(function(result) {
-    console.log(result);
+    var data = _.map(result, function(r) {
+      return {data: r};
+    });
+    return App.models.statistics.bulkCreate(data);
+  }).then(function() {
+    console.log('data successfully inserted in db');
   }).catch(function(error) {
     console.log('####', error, '####');
   });  
