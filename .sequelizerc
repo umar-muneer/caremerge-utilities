@@ -1,0 +1,14 @@
+var migrationsConfig = {
+    config:__filename,
+    username: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: 'testdb',
+    host: process.env.DATABASE_HOST,
+    port: 5432,
+    dialect: 'postgres',
+    dialectOptions:{
+      multipleStatements: true
+    }
+}
+console.log(migrationsConfig);
+module.exports = migrationsConfig;
