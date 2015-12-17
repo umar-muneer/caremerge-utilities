@@ -52,7 +52,11 @@ var pullRequestEvent = function(payload) {
 module.exports.handlePushEvent = function(payload) {
   return pushEvent(payload).then(function(result) {
     var data = _.map(result, function(r) {
-      return {data: _.extend(r, {statType: 'commit'})};
+      return {
+        data: result,
+        type: 'commit',
+        author: r.author.name
+      };
     });
     return App.models.statistics.bulkCreate(data);
   }).then(function() {
@@ -65,7 +69,9 @@ module.exports.handlePushEvent = function(payload) {
 module.exports.handlePullRequestEvent = function(payload) {
   return pullRequestEvent(payload).then(function(result) {
     return App.models.statistics.create({
-      data: _.extend(result, {statType: 'pullrequest'})
+      data: result,
+      type: 'pullrequest',
+      author: result.author
     });
   }).then(function() {
     console.log('data successfully inserted in db');
