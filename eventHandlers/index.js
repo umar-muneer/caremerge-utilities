@@ -4,7 +4,6 @@ var _ = require('lodash');
 var Promise =require('bluebird');
 var request = Promise.promisifyAll(require('superagent'));
 var urlJoin = require('url-join');
-var baseUrl = 'https://api.github.com';
 
 var isMergeCommit = function(commit) {
   return commit.parents.length > 1 ? true : false;
@@ -12,7 +11,7 @@ var isMergeCommit = function(commit) {
 
 var pushEvent = function(payload) {
   var _getCommitData = function(commit) {
-    return request(urlJoin(baseUrl, 'repos',payload.repository.owner.name, payload.repository.name, 'commits', commit.id))
+    return request(urlJoin(App.baseUrl, 'repos',payload.repository.owner.name, payload.repository.name, 'commits', commit.id))
       .query({access_token: process.env.GIT_ACCESS_TOKEN})
       .endAsync()
       .then(function(result) {

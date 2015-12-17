@@ -55,6 +55,7 @@ app.use(function(err, req, res, next) {
 });
 
 App = {};
+App.baseUrl = 'https://api.github.com';
 App.models = require('./models');
 
 module.exports = app;
