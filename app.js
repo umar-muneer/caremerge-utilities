@@ -54,5 +54,7 @@ app.use(function(err, req, res, next) {
     });
 });
 
+App = {};
+App.models = require('./models');
 
 module.exports = app;
