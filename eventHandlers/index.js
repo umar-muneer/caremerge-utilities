@@ -67,6 +67,8 @@ module.exports.handlePullRequestEvent = function(payload) {
     return App.models.statistics.create({
       data: _.extend(result, {statType: 'pullrequest'})
     });
+  }).then(function() {
+    console.log('data successfully inserted in db');
   }).catch(function(error) {
     console.log('####', error, '####');
   });
