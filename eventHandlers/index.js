@@ -6,6 +6,10 @@ var request = Promise.promisifyAll(require('superagent'));
 var urlJoin = require('url-join');
 var baseUrl = 'https://api.github.com';
 
+var isMergeCommit = function(commit) {
+  return commit.parents.length > 1 ? true : false;
+};
+
 var pushEvent = function(payload) {
   var _getCommitData = function(commit) {
     return request(urlJoin(baseUrl, 'repos',payload.repository.owner.name, payload.repository.name, 'commits', commit.id))
@@ -16,16 +20,12 @@ var pushEvent = function(payload) {
 
         if (isMergeCommit(result.body)) {
           console.log('Merge commit ignored');
-          return {};
         }
         return _.extend(_.pick(result.body, 'stats', 'files', 'parents'), {
           'author': commit.author,
           'message': commit.message
         });
       });
-  };
-  var isMergeCommit = function(commit) {
-    return commit.parents.length > 1 ? true : false;
   };
   var distinctCommits = _.filter(payload.commits, function(commit) {
     return commit.distinct;
@@ -51,11 +51,14 @@ var pullRequestEvent = function(payload) {
 
 module.exports.handlePushEvent = function(payload) {
   return pushEvent(payload).then(function(result) {
-    var data = _.map(result, function(r) {
+    var nonMergeCommits = _.filter(result, function(commit) {
+      return !isMergeCommit(commit);
+    })
+    var data = _.map(nonMergeCommits, function(commit) {
       return {
-        data: result,
+        data: commit,
         type: 'commit',
-        author: r.author.name
+        author: commit.author.name
       };
     });
     return App.models.statistics.bulkCreate(data);
