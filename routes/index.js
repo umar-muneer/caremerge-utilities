@@ -20,14 +20,13 @@ router.post('/githooks/pullrequest', function(req,res) {
 
 router.get('/statistics', function(req,res) {
   return App.models.statistics.calculate({
-    fromDate: '123',
-    toDate: '123'
+    fromDate: req.query.fromDate,
+    toDate: req.query.toDate
   }).then(function(result){
     res.json(result);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
-  })
-
+  });
 });
 
 module.exports = router;
