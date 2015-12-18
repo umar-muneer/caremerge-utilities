@@ -23,6 +23,14 @@ module.exports = function(sequelize, DataTypes) {
                   return team.id;
                 });
       },
+      getMemberName: function(memberLogin) {
+        return request(urlJoin(App.baseUrl, 'users', memberLogin))
+          .query({access_token: process.env.GIT_ACCESS_TOKEN})
+          .endAsync()
+          .then(function(response) {
+            return response.body;
+          });
+      },
       getTeamMembers: function(organization, teamName) {
         return Promise.bind(this).then(function() {
           return this.getCaremergeTeamId(organization, teamName);  
@@ -31,9 +39,14 @@ module.exports = function(sequelize, DataTypes) {
             .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
             .endAsync()
           }).then(function(response) {
-            return _.map(response.body, function(member) {
-              return _.pick(member, 'id', 'login');
-          });
+            var members =  _.map(response.body, function(member) {
+              return this.getMemberName(member.login).then(function (result){
+                var info =  _.pick(result, 'id', 'name', 'login');
+                info.name = info.name ? info.name : info.login;
+                return info;
+              });
+          }, this);
+            return Promise.all(members);
         });
       },
       calculateTeamMemberStats: function(member, fromDate, toDate) {
@@ -41,7 +54,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculateCommitStats = function() {
           return _this.findAll({
             where: {
-              author: member.login,
+              author: member.name,
               type: 'commit'
             }
           }).then(function(commits) {
@@ -57,7 +70,7 @@ module.exports = function(sequelize, DataTypes) {
               result.netChanges += commit.data.stats.total;
               uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
             });
-            result.author = member.login,
+            result.author = member.name,
             result.noOfFilesChanged = uniqueFiles.length;
             return result;
           });
@@ -66,7 +79,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculatePullRequestStats = function() {
           return _this.findAll({
             where: {
-              author: member.login,
+              author: member.name,
               type: 'pullrequest'
             }
           }).then(function(pullrequests) {

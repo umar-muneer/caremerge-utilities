@@ -21,7 +21,7 @@ var pushEvent = function(payload) {
           console.log('Merge commit ignored');
         }
         return _.extend(_.pick(result.body, 'stats', 'files', 'parents'), {
-          'author': result.body.author.login,
+          'author': commit.author.name,
           'email': commit.author.email,
           'message': commit.message,
           'repository': payload.repository.name
