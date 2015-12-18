@@ -21,7 +21,8 @@ var pushEvent = function(payload) {
           console.log('Merge commit ignored');
         }
         return _.extend(_.pick(result.body, 'stats', 'files', 'parents'), {
-          'author': commit.author,
+          'author': result.body.author.login,
+          'email': commit.author.email,
           'message': commit.message,
           'repository': payload.repository.name
         });
@@ -58,7 +59,7 @@ module.exports.handlePushEvent = function(payload) {
       return {
         data: commit,
         type: 'commit',
-        author: commit.author.name
+        author: commit.author
       };
     });
     return App.models.statistics.bulkCreate(data);

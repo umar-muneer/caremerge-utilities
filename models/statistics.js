@@ -36,7 +36,7 @@ module.exports = function(sequelize, DataTypes) {
           });
         });
       },
-      calculateTeamMemberStats: function(member, toDate, fromDate) {
+      calculateTeamMemberStats: function(member, fromDate, toDate) {
         var _this = this;
         var calculateCommitStats = function() {
           return _this.findAll({
@@ -44,16 +44,61 @@ module.exports = function(sequelize, DataTypes) {
               author: member.login,
               type: 'commit'
             }
-          }).then(function(commitInfo) {
-            console.log(commitInfo);
+          }).then(function(commits) {
+            var result = {
+              noOfCommits: 0,
+              noOfAdditions: 0,
+              netChanges: 0
+            };
+            var uniqueFiles = [];
+            _.each(commits, function(commit) {
+              result.noOfCommits += 1;
+              result.noOfAdditions += commit.data.stats.additions;
+              result.netChanges += commit.data.stats.total;
+              uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
+            });
+            result.author = member.login,
+            result.noOfFilesChanged = uniqueFiles.length;
+            return result;
           });
         };
 
         var calculatePullRequestStats = function() {
-
+          return _this.findAll({
+            where: {
+              author: member.login,
+              type: 'pullrequest'
+            }
+          }).then(function(pullrequests) {
+            var openedPullRequests = _.filter(pullrequests, function(pr) {
+              return pr.data.action === 'opened';
+            });
+            var closedPullRequests = _.filter(pullrequests, function(pr) {
+              return pr.data.action === 'closed';
+            });
+            return {
+              opened: openedPullRequests.length,
+              closed: closedPullRequests.length
+            };
+          })
         };
 
-
+        var result = {};
+        return calculateCommitStats().then(function(commitStats){
+          _.extend(result, commitStats);
+          return calculatePullRequestStats();
+        }).then(function(prStats) {
+          return _.extend(result, {
+            'pullRequest':prStats
+          });
+        });
+      },
+      calculateTeamStats: function(team, fromDate, toDate) {
+        var _this = this;
+        var teamStats = _.map(team, function(member) {
+          return _this.calculateTeamMemberStats(member, fromDate, toDate);
+        });
+        return Promise.all(teamStats);
       },
       calculate: function(data) {
         var _this = this;
@@ -64,8 +109,8 @@ module.exports = function(sequelize, DataTypes) {
           if (!_.has(data, 'fromDate') || !data.fromDate)
             throw "from date not specified";
           return _this.getTeamMembers(process.env.CM_GIT_ORGANIZATION, process.env.CM_TEAM_NAME);
-        }).then(function(members) {
-          console.log('####', members, '####');
+        }).then(function(teamMembers) {
+          return _this.calculateTeamStats(teamMembers);
         });
       }
     }
