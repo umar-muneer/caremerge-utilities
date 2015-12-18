@@ -20,7 +20,7 @@ var pushEvent = function(payload) {
         if (isMergeCommit(result.body)) {
           console.log('Merge commit ignored');
         }
-        return _.extend(_.pick(result.body, 'stats', 'files', 'parents'), {
+        return _.extend(_.pick(result.body, 'stats', 'files', 'parents', 'sha'), {
           'author': commit.author.name,
           'email': commit.author.email,
           'message': commit.message,
