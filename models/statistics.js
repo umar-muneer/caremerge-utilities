@@ -12,21 +12,17 @@ module.exports = function(sequelize, DataTypes) {
       associate: function(models) {
         // associations can be defined here
       },
-      getRepositories: function(owner) {
-        return request(urlJoin(App.baseUrl, 'orgs', process.env.GIT_OWNER, 'repos'))
-                .query({access_token: process.env.GIT_ACCESS_TOKEN})
-                .endAsync()
-                .then(function(response) {
-                  console.log('####', response.body, '####')
-                });
+      getTeamMembers: function(teamId) {
+        return request(urlJoin(App.baseUrl, 'teams', teamId, 'members'))
+          .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
+          .endAsync()
+          .then(function(response) {
+            return _.map(response.body, function(member) {
+              return _.pick(member, 'id', 'login');
+            });
+          });
       },
-      getContributors: function(repository) {
-        return Promise.resolve({});
-      },
-      findUniqueContributors: function(allContributors) {
-        return Promise.resolve({});
-      },
-      calculateContributorStats: function(contributor, toDate, fromDate) {
+      calculateTeamMemberStats: function(member, toDate, fromDate) {
         return Promise.resolve({});
       },
       calculate: function(data) {
@@ -37,19 +33,9 @@ module.exports = function(sequelize, DataTypes) {
             throw "to date not specified";
           if (!_.has(data, 'fromDate') || !data.fromDate)
             throw "from date not specified";
-        });
-        return getRepositories(processe.env.GIT_OWNER).then(function(repositories) {
-          var contributors = _.map(repositories, function(repo) {
-            return _this.getContributors(repo);
-          });
-          return Promise.all(contributors);
-        }).then(function(allContributors) {
-          return findUniqueContributors(allContributors);
-        }).then(function(uniqueContributors) {
-          var contributorStats = _.map(uniqueContributors, function(contributor) {
-            return _this.calculateContributorStats(contributor);
-          });
-          return Promise.all(contributorStats);
+          return _this.getTeamMembers(process.env.TEAM_ID);
+        }).then(function(members) {
+          console.log('####', members, '####');
         });
       }
     }

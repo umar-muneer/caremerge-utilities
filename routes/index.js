@@ -19,7 +19,15 @@ router.post('/githooks/pullrequest', function(req,res) {
 });
 
 router.get('/statistics', function(req,res) {
-  App.models.statistics.calculate('123','123');
+  return App.models.statistics.calculate({
+    fromDate: '123',
+    toDate: '123'
+  }).then(function(result){
+    res.json(result);
+  }).catch(function(error) {
+    res.status(500).json(error.stack ? error.stack : error);
+  })
+
 });
 
 module.exports = router;

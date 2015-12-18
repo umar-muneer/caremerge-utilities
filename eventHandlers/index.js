@@ -22,7 +22,8 @@ var pushEvent = function(payload) {
         }
         return _.extend(_.pick(result.body, 'stats', 'files', 'parents'), {
           'author': commit.author,
-          'message': commit.message
+          'message': commit.message,
+          'repository': payload.repository.name
         });
       });
   };
