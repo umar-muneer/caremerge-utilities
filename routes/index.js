@@ -18,4 +18,8 @@ router.post('/githooks/pullrequest', function(req,res) {
   res.status(200).end();
 });
 
+router.get('/statistics', function(req,res) {
+  App.models.statistics.calculate('123','123');
+});
+
 module.exports = router;

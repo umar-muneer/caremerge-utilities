@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var request = Promise.promisifyAll(require('superagent'));
+var urlJoin = require('url-join');
 module.exports = function(sequelize, DataTypes) {
   var statistics = sequelize.define('statistics', {
     data: DataTypes.JSONB,
@@ -12,16 +13,21 @@ module.exports = function(sequelize, DataTypes) {
         // associations can be defined here
       },
       getRepositories: function(owner) {
-
+        return request(urlJoin(App.baseUrl, 'orgs', process.env.GIT_OWNER, 'repos'))
+                .query({access_token: process.env.GIT_ACCESS_TOKEN})
+                .endAsync()
+                .then(function(response) {
+                  console.log('####', response.body, '####')
+                });
       },
       getContributors: function(repository) {
-
+        return Promise.resolve({});
       },
       findUniqueContributors: function(allContributors) {
-
+        return Promise.resolve({});
       },
       calculateContributorStats: function(contributor, toDate, fromDate) {
-
+        return Promise.resolve({});
       },
       calculate: function(data) {
         var _this = this;
