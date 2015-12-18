@@ -1,5 +1,5 @@
 var logging = function() {};
-if (process.env.CM_DB_LOGGING)
+if (process.env.CM_DB_LOGGING == 0)
    logging = console.log;
 var migrationsConfig = {
     config:__filename,
@@ -8,7 +8,7 @@ var migrationsConfig = {
     database: process.env.DATABASE_NAME,
     host: process.env.DATABASE_HOST,
     port: 5432,
-    logging: logging,
+    logging: function() {},
     dialect: 'postgres',
     dialectOptions:{
       multipleStatements: true
