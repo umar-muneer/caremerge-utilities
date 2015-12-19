@@ -42,7 +42,7 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return payload;
+  return Promise.resolve(payload);
 };
 
 module.exports.handlePushEvent = function(payload) {
