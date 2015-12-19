@@ -42,7 +42,7 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return App.models.getMemberName(payload.sender.login).then(function(result) {
+  return App.models.statistics.getMemberName(payload.sender.login).then(function(result) {
     return {
       author: result,
       pullRequest: payload.pull_request

@@ -30,7 +30,7 @@ module.exports = function(sequelize, DataTypes) {
           .query({access_token: process.env.GIT_ACCESS_TOKEN})
           .endAsync()
           .then(function(response) {
-            return response.body;
+            return response.body.name || response.body.login;
           });
       },
       getTeamMembers: function(organization, teamName) {
@@ -43,8 +43,7 @@ module.exports = function(sequelize, DataTypes) {
           }).then(function(response) {
             var members =  _.map(response.body, function(member) {
               return this.getMemberName(member.login).then(function (result){
-                var info =  _.pick(result, 'id', 'name', 'login');
-                info.name = info.name ? info.name : info.login;
+                info.name = result;
                 return info;
               });
           }, this);
