@@ -35,6 +35,7 @@ var pushEvent = function(payload) {
   var distinctCommits = _.filter(payload.commits, function(commit) {
     return commit.distinct;
   });
+  console.log('size of distinct commits is', distinctCommits.length);
   var commitDataPromises = _.map(distinctCommits, function(commit) {
     return _getCommitData(commit);
   });
@@ -51,7 +52,6 @@ var pullRequestEvent = function(payload) {
 };
 
 module.exports.handlePushEvent = function(payload) {
-  console.log('size of distinct commits is ->', payload.distinct_size);
   return pushEvent(payload).then(function(result) {
     var nonMergeCommits = _.filter(result, function(commit) {
       return !isMergeCommit(commit);
