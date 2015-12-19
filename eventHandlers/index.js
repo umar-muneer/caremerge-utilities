@@ -42,7 +42,12 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return Promise.resolve(payload);
+  return App.models.getMemberName(payload.sender.login).then(function(result) {
+    return {
+      author: result,
+      pullRequest: payload.pull_request
+    }
+  });
 };
 
 module.exports.handlePushEvent = function(payload) {
@@ -68,7 +73,7 @@ module.exports.handlePushEvent = function(payload) {
 module.exports.handlePullRequestEvent = function(payload) {
   return pullRequestEvent(payload).then(function(result) {
     return App.models.statistics.create({
-      data: result,
+      data: result.pullRequest,
       type: 'pullrequest',
       author: result.author
     });
