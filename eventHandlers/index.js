@@ -51,6 +51,7 @@ var pullRequestEvent = function(payload) {
 };
 
 module.exports.handlePushEvent = function(payload) {
+  console.log('size of distinct commits is ->', payload.distinct_size);
   return pushEvent(payload).then(function(result) {
     var nonMergeCommits = _.filter(result, function(commit) {
       return !isMergeCommit(commit);
