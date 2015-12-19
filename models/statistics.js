@@ -52,7 +52,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculateCommitStats = function() {
           return _this.findAll({
             where: {
-              author: member.name,
+              author: member,
               type: 'commit'
             }
           }).then(function(commits) {
@@ -68,7 +68,7 @@ module.exports = function(sequelize, DataTypes) {
               result.netChanges += commit.data.stats.total;
               uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
             });
-            result.author = member.name,
+            result.author = member,
             result.noOfFilesChanged = uniqueFiles.length;
             return result;
           });
@@ -77,7 +77,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculatePullRequestStats = function() {
           return _this.findAll({
             where: {
-              author: member.name,
+              author: member,
               type: 'pullrequest'
             }
           }).then(function(pullrequests) {
