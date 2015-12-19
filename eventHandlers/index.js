@@ -15,6 +15,7 @@ var pushEvent = function(payload) {
       .query({access_token: process.env.GIT_ACCESS_TOKEN})
       .endAsync()
       .then(function(result) {
+        console.log(result);
         var commit = _.pick(result.body.commit, 'author', 'message');
 
         if (isMergeCommit(result.body)) {
