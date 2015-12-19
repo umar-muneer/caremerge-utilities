@@ -8,7 +8,7 @@ var migrationsConfig = {
     database: process.env.DATABASE_NAME,
     host: process.env.DATABASE_HOST,
     port: 5432,
-    logging: function() {},
+    //logging: function() {},
     dialect: 'postgres',
     dialectOptions:{
       multipleStatements: true

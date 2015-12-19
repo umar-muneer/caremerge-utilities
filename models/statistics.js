@@ -2,11 +2,13 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 var request = Promise.promisifyAll(require('superagent'));
 var urlJoin = require('url-join');
+var moment = require('moment');
 module.exports = function(sequelize, DataTypes) {
   var statistics = sequelize.define('statistics', {
     data: DataTypes.JSONB,
     type: DataTypes.STRING,
-    author: DataTypes.STRING
+    author: DataTypes.STRING,
+    createdAt: DataTypes.DATE
   }, {
     classMethods: {
       associate: function(models) {
@@ -123,7 +125,7 @@ module.exports = function(sequelize, DataTypes) {
             throw "from date not specified";
           return _this.getTeamMembers(process.env.CM_GIT_ORGANIZATION, process.env.CM_TEAM_NAME);
         }).then(function(teamMembers) {
-          return _this.calculateTeamStats(teamMembers);
+          return _this.calculateTeamStats(teamMembers, data.fromDate, data.toDate);
         });
       }
     }

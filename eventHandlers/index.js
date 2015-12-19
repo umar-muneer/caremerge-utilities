@@ -42,23 +42,14 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return Promise.try(function() {
-    return {
-      author: payload.pull_request.user.login,
-      url: payload.pull_request.url,
-      action: payload.action,
-      state: payload.pull_request.state,
-      createdAt: payload.pull_request.created_at,
-      updatedAt: payload.pull_request.updated_at
-    };
-  });
+  return payload;
 };
 
 module.exports.handlePushEvent = function(payload) {
   return pushEvent(payload).then(function(result) {
     var nonMergeCommits = _.filter(result, function(commit) {
       return !isMergeCommit(commit);
-    })
+    });
     var data = _.map(nonMergeCommits, function(commit) {
       return {
         data: commit,
