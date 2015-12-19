@@ -42,10 +42,7 @@ module.exports = function(sequelize, DataTypes) {
             .endAsync()
           }).then(function(response) {
             var members =  _.map(response.body, function(member) {
-              return this.getMemberName(member.login).then(function (result){
-                info.name = result;
-                return info;
-              });
+              return this.getMemberName(member.login);
           }, this);
             return Promise.all(members);
         });
