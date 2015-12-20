@@ -76,7 +76,7 @@ module.exports.handlePushEvent = function(payload) {
 module.exports.handlePullRequestEvent = function(payload) {
   return pullRequestEvent(payload).then(function(result) {
     return App.models.statistics.create({
-      data: result.pullRequest,
+      data: _.omit(result, 'author'),
       type: 'pullrequest',
       author: result.author
     });
