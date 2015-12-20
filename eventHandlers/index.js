@@ -46,6 +46,8 @@ var pullRequestEvent = function(payload) {
   return App.models.statistics.getMemberName(payload.sender.login).then(function(result) {
     return {
       author: result,
+      action: payload.action,
+      number: payload.number,
       pullRequest: payload.pull_request
     }
   });
