@@ -43,12 +43,12 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return {
+  return Promise.resolve({
     author: payload.sender.login,
     action: payload.action,
     number: payload.number,
     pullRequest: payload.pull_request
-  }
+  });
 };
 
 module.exports.handlePushEvent = function(payload) {
