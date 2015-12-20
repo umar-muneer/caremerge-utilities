@@ -41,10 +41,9 @@ module.exports = function(sequelize, DataTypes) {
             .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
             .endAsync()
           }).then(function(response) {
-            var members =  _.map(response.body, function(member) {
-              return this.getMemberName(member.login);
-          }, this);
-            return Promise.all(members);
+            return  _.map(response.body, function(member) {
+              return member.login
+          });
         });
       },
       calculateTeamMemberStats: function(member, fromDate, toDate) {

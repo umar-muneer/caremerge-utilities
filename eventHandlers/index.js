@@ -24,7 +24,7 @@ var pushEvent = function(payload) {
           return _.omit(file, 'patch');
         });
         return _.extend(_.pick(result.body, 'stats', 'parents', 'sha'), {
-          author: commit.author.name,
+          author: payload.sender.login,
           email: commit.author.email,
           message: commit.message,
           repository: payload.repository.name,
@@ -43,14 +43,12 @@ var pushEvent = function(payload) {
 };
 
 var pullRequestEvent = function(payload) {
-  return App.models.statistics.getMemberName(payload.sender.login).then(function(result) {
-    return {
-      author: result,
-      action: payload.action,
-      number: payload.number,
-      pullRequest: payload.pull_request
-    }
-  });
+  return {
+    author: payload.sender.login,
+    action: payload.action,
+    number: payload.number,
+    pullRequest: payload.pull_request
+  }
 };
 
 module.exports.handlePushEvent = function(payload) {
