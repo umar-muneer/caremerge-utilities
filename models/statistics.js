@@ -41,9 +41,12 @@ module.exports = function(sequelize, DataTypes) {
             .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
             .endAsync()
           }).then(function(response) {
-            return  _.map(response.body, function(member) {
-              return member.login
-          });
+            var members = _.map(response.body, function(member) {
+              return this.getMemberName(member.login).then(function(result) {
+                return _.extend(member, {name: result});
+              });
+            }, this);
+            return Promise.all(members);
         });
       },
       calculateTeamMemberStats: function(member, fromDate, toDate) {
@@ -51,7 +54,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculateCommitStats = function() {
           return _this.findAll({
             where: {
-              author: member,
+              author: member.login,
               type: 'commit'
             }
           }).then(function(commits) {
@@ -67,7 +70,7 @@ module.exports = function(sequelize, DataTypes) {
               result.netChanges += commit.data.stats.total;
               uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
             });
-            result.author = member,
+            result.author = member.name || member.login,
             result.noOfFilesChanged = uniqueFiles.length;
             return result;
           });
@@ -76,7 +79,7 @@ module.exports = function(sequelize, DataTypes) {
         var calculatePullRequestStats = function() {
           return _this.findAll({
             where: {
-              author: member,
+              author: member.login,
               type: 'pullrequest'
             }
           }).then(function(pullrequests) {
