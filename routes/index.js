@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var Promise = require('bluebird')
 var eventHandlers = require('../eventHandlers');
+var plotly = require('plotly');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -17,6 +18,19 @@ router.post('/githooks/pullrequest', function(req,res) {
   eventHandlers.handlePullRequestEvent(req.body);
   res.status(200).end();
 });
+
+
+var generateCharts = function(statistics) {
+  var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
+
+  var _generateCommitsChart = function() {};
+
+  var _generatePullRequestsChart = function() {};
+
+  var _generateFilesChangedChart = function() {};
+
+  var _generateNetLinesChart = function() {};
+};
 
 router.get('/statistics', function(req,res) {
   return App.models.statistics.calculate({
