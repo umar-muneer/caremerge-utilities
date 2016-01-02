@@ -3,6 +3,8 @@ var router = express.Router();
 var Promise = require('bluebird')
 var eventHandlers = require('../eventHandlers');
 var plotly = require('plotly');
+var _ = require('lodash');
+var fs = require('fs');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -20,16 +22,88 @@ router.post('/githooks/pullrequest', function(req,res) {
 });
 
 
-var generateCharts = function(statistics) {
+var createCharts = function(statistics) {
   var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
+  var imgOpts = {
+    format: 'png',
+    width: 1000,
+    height: 500
+  };
 
-  var _generateCommitsChart = function() {};
+  var _create = function(figure, chartName) {
+    return new Promise(function(resolve, reject) {
+      chart.getImage(figure, imgOpts, function (error, imageStream) {
+        if (error) {
+          reject();
+          return console.log (error);
+        };
+        var fileStream = fs.createWriteStream(chartName);
+        imageStream.pipe(fileStream);
+        resolve(chartName);
+      });
+    });
+  };
+  var _commitsChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics, 'noOfCommits'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'commits.png');
+  };
 
-  var _generatePullRequestsChart = function() {};
+  var _pullRequestsChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'pullrequests.png');
+  };
 
-  var _generateFilesChangedChart = function() {};
+  var _filesChangedChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics , 'noOfFilesChanged'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'fileschanged.png');
+  };
 
-  var _generateNetLinesChart = function() {};
+  var _netLinesChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics , 'netChanges'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'netlines.png');
+  };
+
+  var _linesAddedChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics , 'noOfAdditions'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'additions.png');
+  };
+
+  var _linesDeletedChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics , 'noOfDeletions'),
+      type: 'bar'
+    };
+    var figure = ['data', [data]];
+    return _create(figure, 'deletions.png');
+  };
+
+  return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
 router.get('/statistics', function(req,res) {
