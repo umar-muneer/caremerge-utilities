@@ -26,11 +26,12 @@ var createCharts = function(statistics) {
   var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
   var imgOpts = {
     format: 'png',
-    width: 1000,
-    height: 500
+    width: 1280,
+    height: 720
   };
 
-  var _create = function(figure, chartName) {
+  var _create = function(data, chartName) {
+    var figure = {data: [data]};
     return new Promise(function(resolve, reject) {
       chart.getImage(figure, imgOpts, function (error, imageStream) {
         if (error) {
@@ -49,8 +50,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics, 'noOfCommits'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
-    return _create(figure, 'commits.png');
+    return _create(data, 'commits.png');
   };
 
   var _pullRequestsChart = function() {
@@ -59,7 +59,7 @@ var createCharts = function(statistics) {
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
+    var figure = {'data': [data]};
     return _create(figure, 'pullrequests.png');
   };
 
@@ -69,8 +69,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfFilesChanged'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
-    return _create(figure, 'fileschanged.png');
+    return _create(data, 'fileschanged.png');
   };
 
   var _netLinesChart = function() {
@@ -79,8 +78,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'netChanges'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
-    return _create(figure, 'netlines.png');
+    return _create(data, 'netlines.png');
   };
 
   var _linesAddedChart = function() {
@@ -89,8 +87,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfAdditions'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
-    return _create(figure, 'additions.png');
+    return _create(data, 'additions.png');
   };
 
   var _linesDeletedChart = function() {
@@ -99,19 +96,21 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfDeletions'),
       type: 'bar'
     };
-    var figure = ['data', [data]];
-    return _create(figure, 'deletions.png');
+    return _create(data, 'deletions.png');
   };
 
   return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
 router.get('/statistics', function(req,res) {
+  var statistics = {};
   return App.models.statistics.calculate({
     fromDate: req.query.fromDate,
     toDate: req.query.toDate
   }).then(function(result){
-    res.json(result);
+    statistics = result;
+    res.json(statistics);
+    return createCharts(result);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
   });
