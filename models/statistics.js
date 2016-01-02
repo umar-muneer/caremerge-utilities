@@ -61,7 +61,8 @@ module.exports = function(sequelize, DataTypes) {
             var result = {
               noOfCommits: 0,
               noOfAdditions: 0,
-              netChanges: 0
+              netChanges: 0,
+              noOfDeletions: 0
             };
             var uniqueFiles = [];
             _.each(commits, function(commit) {
