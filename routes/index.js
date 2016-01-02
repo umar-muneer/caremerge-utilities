@@ -111,6 +111,8 @@ router.get('/statistics', function(req,res) {
     statistics = result;
     res.json(statistics);
     return createCharts(result);
+  }).then(function(){
+    console.log('successfully plotted all charts');
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
   });
