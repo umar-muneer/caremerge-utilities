@@ -67,6 +67,7 @@ module.exports = function(sequelize, DataTypes) {
             _.each(commits, function(commit) {
               result.noOfCommits += 1;
               result.noOfAdditions += commit.data.stats.additions;
+              result.noOfDeletions += commit.data.stats.deletions;
               result.netChanges += commit.data.stats.total;
               uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
             });
