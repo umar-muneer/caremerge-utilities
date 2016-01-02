@@ -109,10 +109,10 @@ router.get('/statistics', function(req,res) {
     toDate: req.query.toDate
   }).then(function(result){
     statistics = result;
-    res.json(statistics);
     return createCharts(result);
   }).then(function(){
     console.log('successfully plotted all charts');
+    res.json(statistics);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
   });
