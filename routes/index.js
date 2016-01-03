@@ -25,14 +25,17 @@ router.post('/githooks/pullrequest', function(req,res) {
 
 var createCharts = function(statistics) {
   var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
-  var imgOpts = {
-    format: 'png',
-    width: 1280,
-    height: 720
-  };
 
-  var _create = function(data, chartName) {
-    var figure = {data: [data]};
+  var _create = function(data, chartName, title) {
+    var imgOpts = {
+      format: 'png',
+      width: 1280,
+      height: 720
+    };
+    var layout = {
+      title: title
+    }
+    var figure = {data: [data], layout: layout};
     return new Promise(function(resolve, reject) {
       chart.getImage(figure, imgOpts, function (error, imageStream) {
         if (error) {
@@ -53,7 +56,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics, 'noOfCommits'),
       type: 'bar'
     };
-    return _create(data, 'commits.png');
+    return _create(data, 'commits.png', 'Commits');
   };
 
   var _pullRequestsChart = function() {
@@ -62,7 +65,7 @@ var createCharts = function(statistics) {
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
       type: 'bar'
     };
-    return _create(data, 'pullrequests.png');
+    return _create(data, 'pullrequests.png', 'Pull Requests');
   };
 
   var _filesChangedChart = function() {
@@ -71,7 +74,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfFilesChanged'),
       type: 'bar'
     };
-    return _create(data, 'fileschanged.png');
+    return _create(data, 'fileschanged.png', 'Files Changed');
   };
 
   var _netLinesChart = function() {
@@ -80,7 +83,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'netChanges'),
       type: 'bar'
     };
-    return _create(data, 'netlines.png');
+    return _create(data, 'netlines.png', 'Net Lines');
   };
 
   var _linesAddedChart = function() {
@@ -89,7 +92,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfAdditions'),
       type: 'bar'
     };
-    return _create(data, 'additions.png');
+    return _create(data, 'additions.png', 'Lines Added');
   };
 
   var _linesDeletedChart = function() {
@@ -98,7 +101,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'noOfDeletions'),
       type: 'bar'
     };
-    return _create(data, 'deletions.png');
+    return _create(data, 'deletions.png', 'Lines Deleted');
   };
 
   return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
