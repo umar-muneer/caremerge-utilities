@@ -62,8 +62,7 @@ var createCharts = function(statistics) {
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
       type: 'bar'
     };
-    var figure = {'data': [data]};
-    return _create(figure, 'pullrequests.png');
+    return _create(data, 'pullrequests.png');
   };
 
   var _filesChangedChart = function() {
