@@ -113,7 +113,7 @@ router.get('/statistics', function(req,res) {
   }).then(function(chartNames){
     console.log('successfully plotted all charts');
     _.each(chartNames, function(chartName) {
-      console.log('####', fs.statsSync(chartName), '####');
+      console.log('####', fs.statSync(chartName), '####');
     })
     res.json(statistics);
   }).catch(function(error) {
