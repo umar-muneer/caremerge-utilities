@@ -110,8 +110,11 @@ router.get('/statistics', function(req,res) {
   }).then(function(result){
     statistics = result;
     return createCharts(result);
-  }).then(function(){
+  }).then(function(chartNames){
     console.log('successfully plotted all charts');
+    _.each(chartNames, function(chartName) {
+      console.log('####', fs.statsSync(chartName), '####');
+    })
     res.json(statistics);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
