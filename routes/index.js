@@ -5,6 +5,7 @@ var eventHandlers = require('../eventHandlers');
 var plotly = require('plotly');
 var _ = require('lodash');
 var fs = require('fs');
+var mailgun = require('mailgun-js');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -39,8 +40,10 @@ var createCharts = function(statistics) {
           return console.log (error);
         };
         var fileStream = fs.createWriteStream(chartName);
+        fileStream.on('finish', function() {
+          resolve(chartName);
+        });
         imageStream.pipe(fileStream);
-        resolve(chartName);
       });
     });
   };
@@ -102,6 +105,31 @@ var createCharts = function(statistics) {
   return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
+var sendEmail = function(chartNames) {
+  var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
+  var attachmentPromises = _.map(chartNames, function(chartName) {
+    return new Promise(function(resolve, reject) {
+      fs.readFile(chartName, function(err, data) {
+        if (err)
+          return reject(err);
+        var attachment = new mailer.Attachment({data: data, filename: chartName});
+        resolve(attachment);
+      });
+    });
+  });
+
+  return Promise.all(attachmentPromises).then(function(attachments) {
+    var data = {
+      from: process.env.CM_EMAIL_SENDER,
+      to: process.env.CM_EMAIL_RECIPIENT,
+      subject: 'Developer Statistics',
+      text: 'Developer statistics for the given period',
+      attachment: attachments
+    };
+    return mailer.messages().send(data);
+  });
+};
+
 router.get('/statistics', function(req,res) {
   var statistics = {};
   return App.models.statistics.calculate({
@@ -112,9 +140,9 @@ router.get('/statistics', function(req,res) {
     return createCharts(result);
   }).then(function(chartNames){
     console.log('successfully plotted all charts');
-    _.each(chartNames, function(chartName) {
-      console.log('####', fs.statSync(chartName), '####');
-    })
+    return sendEmail(chartNames);
+  }).then(function() {
+    console.log('email sent with attachments');
     res.json(statistics);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
