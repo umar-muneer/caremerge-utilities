@@ -55,7 +55,11 @@ module.exports = function(sequelize, DataTypes) {
           return _this.findAll({
             where: {
               author: member.login,
-              type: 'commit'
+              type: 'commit',
+              createdAt: {
+                $gt: fromDate,
+                $lt: toDate
+              }
             }
           }).then(function(commits) {
             var result = {
@@ -82,7 +86,11 @@ module.exports = function(sequelize, DataTypes) {
           return _this.findAll({
             where: {
               author: member.login,
-              type: 'pullrequest'
+              type: 'pullrequest',
+              createdAt: {
+                $gt: fromDate,
+                $lt: toDate
+              }
             }
           }).then(function(pullrequests) {
             var openedPullRequests = _.filter(pullrequests, function(pr) {

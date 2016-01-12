@@ -6,6 +6,7 @@ var plotly = require('plotly');
 var _ = require('lodash');
 var fs = require('fs');
 var mailgun = require('mailgun-js');
+var moment = require('moment');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -132,16 +133,33 @@ var sendEmail = function(chartNames) {
   });
 };
 
+var _calculateDuration = function(period) {
+  var result = {};
+  if (period === 'weekly')
+    result.fromDate   = moment.utc().subtract(1, 'week').format();
+  else if (period === 'monthly')
+    result.fromDate = moment.utc().subtract(1, 'month').format();
+  else if (period === 'daily')
+    result.fromDate = moment.utc().subtract(1, 'day').format();
+
+  result.title = period;
+  result.toDate = moment.utc().format();
+
+  return result;
+};
 router.get('/statistics', function(req,res) {
   var statistics = {};
-  return App.models.statistics.calculate({
-    fromDate: req.query.fromDate,
-    toDate: req.query.toDate
-  }).then(function(result){
+  var duration = _calculateDuration(req.query.period);
+
+  return App.models.statistics.calculate(duration).then(function(result){
     statistics = result;
+    if (process.env.NODE_ENV === 'test')
+      return Promise.resolve([]);
     return createCharts(result);
   }).then(function(chartNames){
     console.log('successfully plotted all charts');
+    if (process.env.NODE_ENV === 'test')
+      return Promise.resolve({});
     return sendEmail(chartNames);
   }).then(function() {
     console.log('email sent with attachments');
