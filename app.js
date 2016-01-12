@@ -58,4 +58,6 @@ App = {};
 App.baseUrl = 'https://api.github.com';
 App.models = require('./models');
 
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+
 module.exports = app;

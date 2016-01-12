@@ -7,6 +7,7 @@ var _ = require('lodash');
 var fs = require('fs');
 var mailgun = require('mailgun-js');
 var moment = require('moment');
+var inflection = require('inflection');
 
 /* GET home page. */
 router.get('/', function(req, res) {
@@ -108,7 +109,7 @@ var createCharts = function(statistics) {
   return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
-var sendEmail = function(chartNames) {
+var sendEmail = function(chartNames, duration) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
   var attachmentPromises = _.map(chartNames, function(chartName) {
     return new Promise(function(resolve, reject) {
@@ -122,10 +123,13 @@ var sendEmail = function(chartNames) {
   });
 
   return Promise.all(attachmentPromises).then(function(attachments) {
+    var fromDate = moment(duration.fromDate).format('DD-MMM-YYYY');
+    var toDate = moment(duration.toDate).format('DD-MMM-YYYY');
+    var subject = inflection.capitalize(duration.title) + ' Stats: ' + fromDate + ' to ' + toDate
     var data = {
       from: process.env.CM_EMAIL_SENDER,
       to: process.env.CM_EMAIL_RECIPIENT,
-      subject: 'Developer Statistics',
+      subject: subject,
       text: 'Developer statistics for the given period',
       attachment: attachments
     };
@@ -160,7 +164,7 @@ router.get('/statistics', function(req,res) {
     console.log('successfully plotted all charts');
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve({});
-    return sendEmail(chartNames);
+    return sendEmail(chartNames, duration);
   }).then(function() {
     console.log('email sent with attachments');
     res.json(statistics);
