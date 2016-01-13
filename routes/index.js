@@ -34,9 +34,26 @@ var createCharts = function(statistics) {
       width: 1280,
       height: 720
     };
+    var annotations = _.map(_.zip(data.x, data.y), function(val) {
+      return {
+        x: val[0],
+        y: val[1],
+        text: val[1],
+        showarrow: false,
+        xref: 'x',
+        yref: 'y',
+        xanchor: 'top',
+        yanchor: 'bottom'
+      };
+    });
+
+    annotations = _.filter(annotations, function(data) {
+      return data.y != 0;
+    });
     var layout = {
-      title: title
-    }
+      title: title,
+      annotations: annotations
+    };
     var figure = {data: [data], layout: layout};
     return new Promise(function(resolve, reject) {
       chart.getImage(figure, imgOpts, function (error, imageStream) {
@@ -106,7 +123,7 @@ var createCharts = function(statistics) {
     return _create(data, 'deletions.png', 'Lines Deleted');
   };
 
-  return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
+  return Promise.all([_commitsChart()]);//, _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
 var sendEmail = function(chartNames, duration) {
