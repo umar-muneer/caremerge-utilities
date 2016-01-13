@@ -102,7 +102,7 @@ var createCharts = function(statistics) {
       y: _.pluck(statistics , 'netChanges'),
       type: 'bar'
     };
-    return _create(data, 'netlines.png', 'Net Lines');
+    return _create(data, 'netchanges.png', 'Net Changes');
   };
 
   var _linesAddedChart = function() {
