@@ -123,7 +123,7 @@ var createCharts = function(statistics) {
     return _create(data, 'deletions.png', 'Lines Deleted');
   };
 
-  return Promise.all([_commitsChart()]);//, _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
+  return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
 };
 
 var sendEmail = function(chartNames, duration) {
