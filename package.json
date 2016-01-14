@@ -17,6 +17,7 @@
     "inflection": "^1.8.0",
     "jade": "~1.6.0",
     "jsdom": "^7.2.1",
+    "json2csv": "^3.0.2",
     "knox": "^0.9.2",
     "lodash": "^3.10.1",
     "mailgun-js": "^0.7.7",
