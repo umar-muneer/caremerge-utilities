@@ -174,7 +174,9 @@ var _generateCSV = function(statistics) {
       PullRequestsOpened: val.pullRequest.opened,
       TicketsClosed: 0,
       FileChanges: val.noOfFilesChanged,
-      NetLines: val.netLines
+      NetLines: val.netLines,
+      LinesAdded: val.noOfAdditions,
+      LinesDeleted: val.noOfDeletions
     }
   });
   var fields = csvData.length ? _.keys(csvData[0]) : [];
