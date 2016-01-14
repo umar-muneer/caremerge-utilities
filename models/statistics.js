@@ -66,6 +66,7 @@ module.exports = function(sequelize, DataTypes) {
               noOfCommits: 0,
               noOfAdditions: 0,
               netChanges: 0,
+              netLines: 0,
               noOfDeletions: 0
             };
             var uniqueFiles = [];
@@ -76,6 +77,7 @@ module.exports = function(sequelize, DataTypes) {
               result.netChanges += commit.data.stats.total;
               uniqueFiles = _.union(uniqueFiles, _.pluck(commit.data.files, 'filename'))
             });
+            result.netLines = result.noOfAdditions - result.noOfDeletions;
             result.author = member.name || member.login,
             result.noOfFilesChanged = uniqueFiles.length;
             return result;

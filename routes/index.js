@@ -8,7 +8,7 @@ var fs = require('fs');
 var mailgun = require('mailgun-js');
 var moment = require('moment');
 var inflection = require('inflection');
-
+var json2CSV = require('json2csv');
 /* GET home page. */
 router.get('/', function(req, res) {
   res.render('index', { title: 'github was here, well atleast it should have been !!!' });
@@ -43,7 +43,7 @@ var createCharts = function(statistics) {
         xref: 'x',
         yref: 'y',
         xanchor: 'top',
-        yanchor: 'bottom'
+        yanchor: val[1] < 0 ? 'top' : 'bottom'
       };
     });
 
@@ -79,12 +79,17 @@ var createCharts = function(statistics) {
   };
 
   var _pullRequestsChart = function() {
-    var data = {
+    var openedPullRequestData = {
       x: _.pluck(statistics, 'author'),
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
       type: 'bar'
     };
-    return _create(data, 'pullrequests.png', 'Pull Requests');
+    var closedPullRequestData = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
+      type: 'bar'
+    };
+    return _create(openedPullRequestData, 'pullrequestsopened.png', 'Pull Requests Opened');
   };
 
   var _filesChangedChart = function() {
@@ -96,7 +101,7 @@ var createCharts = function(statistics) {
     return _create(data, 'fileschanged.png', 'Files Changed');
   };
 
-  var _netLinesChart = function() {
+  var _netChangesChart = function() {
     var data = {
       x: _.pluck(statistics, 'author'),
       y: _.pluck(statistics , 'netChanges'),
@@ -104,7 +109,6 @@ var createCharts = function(statistics) {
     };
     return _create(data, 'netchanges.png', 'Net Changes');
   };
-
   var _linesAddedChart = function() {
     var data = {
       x: _.pluck(statistics, 'author'),
@@ -123,7 +127,15 @@ var createCharts = function(statistics) {
     return _create(data, 'deletions.png', 'Lines Deleted');
   };
 
-  return Promise.all([_commitsChart(), _pullRequestsChart(), _netLinesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart()]);
+  var _netLinesChart = function() {
+    var data = {
+      x: _.pluck(statistics, 'author'),
+      y: _.pluck(statistics , 'netLines'),
+      type: 'bar'
+    };
+    return _create(data, 'netlines.png', 'Net Lines');
+  };
+  return Promise.all([_commitsChart(), _pullRequestsChart(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
 };
 
 var sendEmail = function(chartNames, duration) {
@@ -154,6 +166,33 @@ var sendEmail = function(chartNames, duration) {
   });
 };
 
+var _generateCSV = function(statistics) {
+  var csvData =  _.map(statistics, function(val) {
+    return {
+      Name: val.author,
+      Commits: val.noOfCommits,
+      PullRequestsOpened: val.pullRequest.opened,
+      TicketsClosed: 0,
+      FileChanges: val.noOfFilesChanged,
+      NetLines: val.netLines
+    }
+  });
+  var fields = csvData.length ? _.keys(csvData[0]) : [];
+
+  var fileName = 'stats-' + moment().unix() + '.csv';
+  return new Promise(function(resolve, reject) {
+    json2CSV( {data: csvData, fields: fields}, function(err, csv) {
+      if (err)
+        return reject(err);
+      fs.writeFile(fileName, csv, function(_err) {
+        if (_err)
+          return reject(_err)
+        return resolve(fileName);
+      })
+    });
+  });
+};
+
 var _calculateDuration = function(period) {
   var result = {};
   if (period === 'weekly')
@@ -172,6 +211,7 @@ router.get('/statistics', function(req,res) {
   var statistics = {};
   var duration = _calculateDuration(req.query.period);
 
+  req.query.format = req.query.format || 'json';
   return App.models.statistics.calculate(duration).then(function(result){
     statistics = result;
     if (process.env.NODE_ENV === 'test')
@@ -184,7 +224,13 @@ router.get('/statistics', function(req,res) {
     return sendEmail(chartNames, duration);
   }).then(function() {
     console.log('email sent with attachments');
-    res.json(statistics);
+    if (req.query.format === 'csv'){
+      return _generateCSV(statistics).then(function(file) {
+        res.download(file, 'stats.csv');
+      });
+    }
+    return res.json(statistics);
+
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
   });
