@@ -60,7 +60,8 @@ module.exports = function(sequelize, DataTypes) {
                 $gt: fromDate,
                 $lt: toDate
               }
-            }
+            },
+            order: [['author', 'ASC']]
           }).then(function(commits) {
             var result = {
               noOfCommits: 0,
@@ -93,7 +94,8 @@ module.exports = function(sequelize, DataTypes) {
                 $gt: fromDate,
                 $lt: toDate
               }
-            }
+            },
+            order: [['author', 'ASC']]
           }).then(function(pullrequests) {
             var openedPullRequests = _.filter(pullrequests, function(pr) {
               return pr.data.action === 'opened';
