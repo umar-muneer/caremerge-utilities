@@ -102,35 +102,47 @@ var createCharts = function(statistics) {
   };
 
   var _netChangesChart = function() {
+    var yAxis = _.map(_.pluck(statistics , 'netChanges'), function(value) {
+      return value>3000 ? 3000 : value;
+    });
     var data = {
       x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics , 'netChanges'),
+      y: yAxis,
       type: 'bar'
     };
     return _create(data, 'netchanges.png', 'Net Changes');
   };
   var _linesAddedChart = function() {
+    var yAxis = _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
+      return value>3000 ? 3000 : value;
+    });
     var data = {
       x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics , 'noOfAdditions'),
+      y: yAxis,
       type: 'bar'
     };
     return _create(data, 'additions.png', 'Lines Added');
   };
 
   var _linesDeletedChart = function() {
+    var yAxis = _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
+      return value>3000 ? 3000 : value;
+    });
     var data = {
       x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics , 'noOfDeletions'),
+      y: yAxis,
       type: 'bar'
     };
     return _create(data, 'deletions.png', 'Lines Deleted');
   };
 
   var _netLinesChart = function() {
+    var yAxis = _.map(_.pluck(statistics , 'netLines'), function(value) {
+      return value>3000 ? 3000 : value;
+    });
     var data = {
       x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics , 'netLines'),
+      y: yAxis,
       type: 'bar'
     };
     return _create(data, 'netlines.png', 'Net Lines');
