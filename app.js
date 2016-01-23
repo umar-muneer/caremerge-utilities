@@ -4,7 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-
+var http = require('http');
 var routes = require('./routes/index');
 
 var app = express();
@@ -53,6 +53,8 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
+
+http.globalAgent.maxSockets = 50;
 
 App = {};
 App.baseUrl = 'https://api.github.com';

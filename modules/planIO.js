@@ -12,11 +12,12 @@ var _getAllIssueStatuses = function() {
     .query({key: process.env.PLAN_IO_API_KEY, project_id: process.env.PLAN_IO_PROJECT_ID})
     .endAsync()
     .then(function(response) {
-      return _.map(response.body.issue_statuses, function(status) {
-        var result = {};
+      console.log('retrieved issue statuses');
+      var result = {};
+      _.each(response.body.issue_statuses, function(status) {
         result[status.name] = status;
-        return result;
       });
+      return result;
     });
 };
 
@@ -30,6 +31,7 @@ var _getAllIssues = function(period) {
       .endAsync()
       .then(function(response) {
         issues.push(response.body);
+        console.log('retrieved issues page, total -> ', response.body.issues.length);
         if (response.body.total_count > response.body.offset + response.body.limit)
           return _getIssues(issues, offset += limit);
         return issues;
@@ -41,7 +43,8 @@ var _getAllIssues = function(period) {
       .query({key: process.env.PLAN_IO_API_KEY, project_id: process.env.PLAN_IO_PROJECT_ID, include: 'journals'})
       .endAsync()
       .then(function(response) {
-        return response.body;
+        console.log('retrieved an individual issue with id -> ', response.body.issue.id);
+        return response.body.issue;
       });
   };
   return _getIssues(issues, 0).then(function(result) {
@@ -55,38 +58,51 @@ var _getAllIssues = function(period) {
   });
 };
 
-var _calculate = function(issues, issueStatuses) {
+var _calculate = function(period, issues, issueStatuses) {
+
+  var statistics = {};
+
   var _calculateDevelopedTicketStats = function() {
+    var fromDate = moment(moment(period.fromDate).format('YYYY-DD-MMMM'));
 
+    var result = {};
+    _.each(issues, function(issue) {
+      var journalsInDateRange = _.filter(issue.journals, function(ij) {
+        return moment(moment(ij.created_on).format('YYYY-DD-MMMM')) >= fromDate;
+      });
+      var developedJournals = _.filter(journalsInDateRange, function(ij) {
+        return _.filter(ij.details, function(ijd) {
+          return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Developed.id;
+        }).length;
+      });
+      _.each(developedJournals, function(dj) {
+        var entry = result[dj.user.name] || {};
+        entry.issues = entry.issues || [];
+        entry.developed = entry.developed ? entry.developed + 1 : 1;
+        entry.issues.push(issue.id);
+        result[dj.user.name] = entry;
+      });
+    });
+    return result;
   };
-
   var _calculateClosedTicketStats = function() {
 
   };
-
   var _calculateDeployedTicketStats = function() {
 
   };
-
-  return Promise.bind(this).then(function() {
-    return _calculateDevelopedTicketStats();
-  }).then(function(result) {
-    this.developedTickets = result;
-    return _calculateClosedTicketStats();
-  }).then(function() {
-    this.closedTickets = result;
-    return _calculateDeployedTicketStats();
-  }).then(function(result) {
-    return {
-      closed: this.closedTickets,
-      deployed: result,
-      developed: this.developedTickets
-    };
+  return Promise.try(function() {
+    var developedTickets = _calculateDevelopedTicketStats();
+    return developedTickets;
   });
 };
 
 module.exports.calculate = function(period) {
+  var issueStatuses = [];
   return _getAllIssueStatuses().then(function(result) {
+    issueStatuses = result
     return _getAllIssues(period);
+  }).then(function(result) {
+    return _calculate(period, result, issueStatuses);
   });
 };
