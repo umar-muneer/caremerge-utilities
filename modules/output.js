@@ -133,7 +133,7 @@ var _createCharts = function(statistics) {
     };
     return _create(data, 'netlines.png', 'Net Lines');
   };
-  return Promise.all([_commitsChart(), _openedPullRequests(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
+  return Promise.all([_commitsChart(), _openedPullRequests(), _closedPullRequests(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
 };
 
 var _generateCSV = function(statistics) {
@@ -142,6 +142,7 @@ var _generateCSV = function(statistics) {
       Name: val.author,
       Commits: val.noOfCommits,
       PullRequestsOpened: val.pullRequest.opened,
+      PullRequestsClosed: val.pullRequest.closed,
       TicketsClosed: 0,
       FileChanges: val.noOfFilesChanged,
       NetLines: val.netLines,
