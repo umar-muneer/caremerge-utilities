@@ -95,4 +95,13 @@ router.get('/statistics', function(req,res) {
   });
 });
 
+router.get('/statistics-planio', function(req, res) {
+  var duration = _calculateDuration(req.query.period);
+  return App.modules.planIO.calculate(duration).then(function(statistics) {
+    res.json(statistics);
+  }).catch(function(error) {
+    res.status(500).json(error.stack ? error.stack : error);
+  });
+});
+
 module.exports = router;
