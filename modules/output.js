@@ -6,6 +6,7 @@ var plotly = require('plotly');
 var fs = require('fs');
 var Promise = require('bluebird');
 var _ = require('lodash');
+var moment = require('moment');
 
 var _createCharts = function(statistics) {
   var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
@@ -60,21 +61,23 @@ var _createCharts = function(statistics) {
     return _create(data, 'commits.png', 'Commits');
   };
 
-  var _pullRequestsChart = function() {
+  var _openedPullRequests = function() {
     var openedPullRequestData = {
       x: _.pluck(statistics, 'author'),
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
       type: 'bar'
     };
+    return _create(openedPullRequestData, 'pullrequestsopened.png', 'Pull Requests Opened');
+  };
+
+  var _closedPullRequests = function() {
     var closedPullRequestData = {
       x: _.pluck(statistics, 'author'),
       y: _.pluck(_.pluck(statistics, 'pullRequest') , 'closed'),
       type: 'bar'
     };
-    return Promise.all([_create(openedPullRequestData, 'pullrequestsopened.png', 'Pull Requests Opened'),
-                        _create(closedPullRequestData, 'pullrequestsclosed.png', 'Closed Pull Requests')]);
+    return _create(closedPullRequestData, 'pullrequestsclosed.png', 'Closed Pull Requests');
   };
-
   var _filesChangedChart = function() {
     var data = {
       x: _.pluck(statistics, 'author'),
@@ -130,7 +133,7 @@ var _createCharts = function(statistics) {
     };
     return _create(data, 'netlines.png', 'Net Lines');
   };
-  return Promise.all([_commitsChart(), _pullRequestsChart(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
+  return Promise.all([_commitsChart(), _openedPullRequests(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
 };
 
 var _generateCSV = function(statistics) {
