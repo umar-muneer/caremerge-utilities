@@ -56,7 +56,9 @@ app.use(function(err, req, res, next) {
 
 App = {};
 App.baseUrl = 'https://api.github.com';
+App.planIOUrl = 'https://hfp.plan.io';
 App.models = require('./models');
+App.modules = require('./modules');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
