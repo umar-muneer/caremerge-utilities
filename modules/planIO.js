@@ -21,6 +21,10 @@ var _getAllIssueStatuses = function() {
     });
 };
 
+var getDateObject = function(date) {
+  return moment(moment(date).format());
+}
+
 var _getAllIssues = function(period) {
   var fromDate = moment(period.fromDate).format('YYYY-MM-DD');
   var limit = 100;
@@ -60,20 +64,29 @@ var _getAllIssues = function(period) {
 
 var _calculate = function(period, issues, issueStatuses) {
 
+
   var statistics = {};
 
   var _calculateDevelopedTicketStats = function() {
-    var fromDate = moment(moment(period.fromDate).format('YYYY-DD-MMMM'));
-
     var result = {};
     _.each(issues, function(issue) {
       var journalsInDateRange = _.filter(issue.journals, function(ij) {
-        return moment(moment(ij.created_on).format('YYYY-DD-MMMM')) >= fromDate;
+        return getDateObject(ij.created_on) >= getDateObject(period.fromDate);
       });
       var developedJournals = _.filter(journalsInDateRange, function(ij) {
         return _.filter(ij.details, function(ijd) {
           return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Developed.id;
         }).length;
+      });
+      var unDevelopedJournals = _.filter(journalsInDateRange, function(jidr) {
+        return !_.contains(_.pluck(developedJournals, 'id'), jidr.id);
+      });
+      developedJournals = _.filter(developedJournals, function(dj) {
+        return !_.find(unDevelopedJournals, function(udj) {
+          return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
+              return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
+            });
+        });
       });
       _.each(developedJournals, function(dj) {
         var entry = result[dj.user.name] || {};
