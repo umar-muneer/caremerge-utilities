@@ -66,7 +66,6 @@ var _calculate = function(period, issues, issueStatuses) {
   var statistics = {};
 
   var _calculateDevelopedStats = function() {
-    var result = {};
     _.each(issues, function(issue) {
       var journalsInDateRange = _.filter(issue.journals, function(ij) {
         return getDateObject(ij.created_on) >= getDateObject(period.fromDate);
@@ -92,15 +91,15 @@ var _calculate = function(period, issues, issueStatuses) {
       });
       if (!developedJournal)
         return;
-      var entry = result[developedJournal.user.name] || {};
-      entry.issues = entry.issues || [];
-      entry.issues.push(issue.id);
-      result[developedJournal.user.name] = entry;
+      var entry = statistics[developedJournal.user.name] || {};
+      entry.developed = entry.developed || {};
+      entry.developed.count = entry.developed.count ? entry.developed.count + 1 : 1;
+      entry.developed.issues = entry.developed.issues || [];
+      entry.developed.issues.push(issue.id);
+      statistics[developedJournal.user.name] = entry;
     });
-    return result;
   };
   var _calculateDeployedStats = function() {
-    var result = {};
     _.each(issues, function(issue) {
       var journalsInDateRange = _.filter(issue.journals, function(ij) {
         return getDateObject(ij.created_on) >= getDateObject(period.fromDate);
@@ -126,15 +125,15 @@ var _calculate = function(period, issues, issueStatuses) {
       });
       if (!deployedJournal)
         return;
-      var entry = result[deployedJournal.user.name] || {};
-      entry.issues = entry.issues || [];
-      entry.issues.push(issue.id);
-      result[deployedJournal.user.name] = entry;
+      var entry = statistics[deployedJournal.user.name] || {};
+      entry.deployed = entry.deployed || {};
+      entry.deployed.count = entry.deployed.count ? entry.deployed.count + 1 : 1;
+      entry.deployed.issues = entry.deployed.issues || [];
+      entry.deployed.issues.push(issue.id);
+      statistics[deployedJournal.user.name] = entry;
     });
-    return result;
   };
   var _calculateClosedStats = function() {
-    var result = {};
     var closedIssues = _.filter(issues, function(issue) {
       return issue.status.id === issueStatuses.Closed.id;
     });
@@ -155,22 +154,29 @@ var _calculate = function(period, issues, issueStatuses) {
       });
       if (!lastClosedJournal)
         return;
-      var entry = result[lastClosedJournal.user.name] || {};
-      entry.issues = entry.issues || [];
-      entry.issues.push(issue.id);
-      result[lastClosedJournal.user.name] = entry;
+      var entry = statistics[lastClosedJournal.user.name] || {};
+      entry.closed = entry.closed || {};
+      entry.closed.issues = entry.closed.issues || [];
+      entry.closed.issues.push(issue.id);
+      entry.closed.count = entry.closed.count ? entry.closed.count + 1 : 1;
+      statistics[lastClosedJournal.user.name] = entry;
     });
-    return result;
   };
   return Promise.try(function() {
-    var developedTickets = _calculateDevelopedStats();
-    var closedTickets = _calculateClosedStats();
-    var deployedTickets = _calculateDeployedStats();
-    return {
-      developed: developedTickets,
-      closed: closedTickets,
-      deployed: deployedTickets
-    };
+    _calculateDevelopedStats();
+    _calculateClosedStats();
+    _calculateDeployedStats();
+
+
+    return _.map(_.keys(statistics), function(author) {
+      var authorData = statistics[author];
+      return {
+        author: author,
+        developed: authorData.developed ? authorData.developed.issues.length : 0,
+        deployed: authorData.deployed ? authorData.deployed.issues.length : 0,
+        closed: authorData.closed ? authorData.closed.issues.length : 0
+      };
+    });
   });
 };
 
