@@ -22,11 +22,11 @@ var _getAllIssueStatuses = function() {
 };
 
 var getDateObject = function(date) {
-  return moment(moment(date).format());
+  return moment.utc(date);
 }
 
 var _getAllIssues = function(period) {
-  var fromDate = moment(period.fromDate).format('YYYY-MM-DD');
+  var fromDate = moment.utc(period.fromDate).format('YYYY-MM-DD');
   var limit = 100;
   var issues = [];
   var _getIssues = function(issues, offset) {
@@ -79,16 +79,16 @@ var _calculate = function(period, issues, issueStatuses) {
       var unDevelopedJournals = _.filter(journalsInDateRange, function(jidr) {
         return !_.contains(_.pluck(developedJournals, 'id'), jidr.id);
       });
-      var maxDevelopedTime = moment(_.max(developedJournals, function(journal) {
-        return moment(journal.created_on).unix();
-      })).unix();
+      var maxDevelopedTime = getDateObject(_.max(developedJournals, function(journal) {
+        return getDateObject(journal.created_on).unix();
+      }).created_on).unix();
 
       var developedJournal = _.find(developedJournals, function(dj) {
         return !_.find(unDevelopedJournals, function(udj) {
           return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
               return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
             });
-        }) && moment(dj.created_on).unix() === maxDevelopedTime;
+        }) && getDateObject(dj.created_on).unix() === maxDevelopedTime;
       });
       if (!developedJournal)
         return;
@@ -100,7 +100,38 @@ var _calculate = function(period, issues, issueStatuses) {
     return result;
   };
   var _calculateDeployedStats = function() {
+    var result = {};
+    _.each(issues, function(issue) {
+      var journalsInDateRange = _.filter(issue.journals, function(ij) {
+        return getDateObject(ij.created_on) >= getDateObject(period.fromDate);
+      });
+      var deployedJournals = _.filter(journalsInDateRange, function(ij) {
+        return _.filter(ij.details, function(ijd) {
+          return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Deployed.id;
+        }).length;
+      });
+      var unDeployedJournals = _.filter(journalsInDateRange, function(jidr) {
+        return !_.contains(_.pluck(deployedJournals, 'id'), jidr.id);
+      });
+      var maxDeployedTime = getDateObject(_.max(deployedJournals, function(journal) {
+        return getDateObject(journal.created_on).unix();
+      }).created_on).unix();
 
+      var deployedJournal = _.find(deployedJournals, function(dj) {
+        return !_.find(unDeployedJournals, function(udj) {
+            return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
+                return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
+              });
+          }) && getDateObject(dj.created_on).unix() === maxDeployedTime;
+      });
+      if (!deployedJournal)
+        return;
+      var entry = result[deployedJournal.user.name] || {};
+      entry.issues = entry.issues || [];
+      entry.issues.push(issue.id);
+      result[deployedJournal.user.name] = entry;
+    });
+    return result;
   };
   var _calculateClosedStats = function() {
     var result = {};
@@ -116,11 +147,11 @@ var _calculate = function(period, issues, issueStatuses) {
           return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Closed.id;
         }).length;
       });
-      var maxClosedTime = moment(_.max(allClosedJournals, function(cj) {
-        return moment(cj.created_on).unix();
+      var maxClosedTime = getDateObject(_.max(allClosedJournals, function(cj) {
+        return getDateObject(cj.created_on).unix();
       }).created_on).unix();
       var lastClosedJournal = _.find(allClosedJournals, function(closedJournal) {
-        return moment(closedJournal.created_on).unix() === maxClosedTime;
+        return getDateObject(closedJournal.created_on).unix() === maxClosedTime;
       });
       if (!lastClosedJournal)
         return;

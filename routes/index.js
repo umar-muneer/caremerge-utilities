@@ -55,11 +55,11 @@ var sendEmail = function(chartNames, duration) {
 var _calculateDuration = function(period) {
   var result = {};
   if (period === 'weekly')
-    result.fromDate   = moment.utc().subtract(1, 'week').format();
+    result.fromDate   = moment.utc().subtract(1, 'week').startOf('day').format();
   else if (period === 'monthly')
-    result.fromDate = moment.utc().subtract(1, 'month').format();
+    result.fromDate = moment.utc().subtract(1, 'month').startOf('day').format();
   else if (period === 'daily')
-    result.fromDate = moment.utc().subtract(1, 'day').format();
+    result.fromDate = moment.utc().subtract(1, 'day').startOf('day').format();
 
   result.title = period;
   result.toDate = moment.utc().format();
