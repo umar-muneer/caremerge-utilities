@@ -63,11 +63,9 @@ var _getAllIssues = function(period) {
 };
 
 var _calculate = function(period, issues, issueStatuses) {
-
-
   var statistics = {};
 
-  var _calculateDevelopedTicketStats = function() {
+  var _calculateDevelopedStats = function() {
     var result = {};
     _.each(issues, function(issue) {
       var journalsInDateRange = _.filter(issue.journals, function(ij) {
@@ -81,32 +79,67 @@ var _calculate = function(period, issues, issueStatuses) {
       var unDevelopedJournals = _.filter(journalsInDateRange, function(jidr) {
         return !_.contains(_.pluck(developedJournals, 'id'), jidr.id);
       });
-      developedJournals = _.filter(developedJournals, function(dj) {
+      var maxDevelopedTime = moment(_.max(developedJournals, function(journal) {
+        return moment(journal.created_on).unix();
+      })).unix();
+
+      var developedJournal = _.find(developedJournals, function(dj) {
         return !_.find(unDevelopedJournals, function(udj) {
           return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
               return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
             });
-        });
+        }) && moment(dj.created_on).unix() === maxDevelopedTime;
       });
-      _.each(developedJournals, function(dj) {
-        var entry = result[dj.user.name] || {};
-        entry.issues = entry.issues || [];
-        entry.developed = entry.developed ? entry.developed + 1 : 1;
-        entry.issues.push(issue.id);
-        result[dj.user.name] = entry;
-      });
+      if (!developedJournal)
+        return;
+      var entry = result[developedJournal.user.name] || {};
+      entry.issues = entry.issues || [];
+      entry.issues.push(issue.id);
+      result[developedJournal.user.name] = entry;
     });
     return result;
   };
-  var _calculateClosedTicketStats = function() {
+  var _calculateDeployedStats = function() {
 
   };
-  var _calculateDeployedTicketStats = function() {
-
+  var _calculateClosedStats = function() {
+    var result = {};
+    var closedIssues = _.filter(issues, function(issue) {
+      return issue.status.id === issueStatuses.Closed.id;
+    });
+    _.each(closedIssues, function(issue) {
+      var journalsInDateRange = _.filter(issue.journals, function(ij) {
+        return getDateObject(ij.created_on) >= getDateObject(period.fromDate);
+      });
+      var allClosedJournals = _.filter(journalsInDateRange, function(ij) {
+        return _.filter(ij.details, function(ijd) {
+          return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Closed.id;
+        }).length;
+      });
+      var maxClosedTime = moment(_.max(allClosedJournals, function(cj) {
+        return moment(cj.created_on).unix();
+      }).created_on).unix();
+      var lastClosedJournal = _.find(allClosedJournals, function(closedJournal) {
+        return moment(closedJournal.created_on).unix() === maxClosedTime;
+      });
+      if (!lastClosedJournal)
+        return;
+      var entry = result[lastClosedJournal.user.name] || {};
+      entry.issues = entry.issues || [];
+      entry.issues.push(issue.id);
+      result[lastClosedJournal.user.name] = entry;
+    });
+    return result;
   };
   return Promise.try(function() {
-    var developedTickets = _calculateDevelopedTicketStats();
-    return developedTickets;
+    var developedTickets = _calculateDevelopedStats();
+    var closedTickets = _calculateClosedStats();
+    var deployedTickets = _calculateDeployedStats();
+    return {
+      developed: developedTickets,
+      closed: closedTickets,
+      deployed: deployedTickets
+    };
   });
 };
 
