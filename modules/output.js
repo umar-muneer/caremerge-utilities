@@ -136,7 +136,7 @@ var _createCharts = function(statistics) {
   return Promise.all([_commitsChart(), _openedPullRequests(), _closedPullRequests(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
 };
 
-var _generateCSV = function(statistics) {
+var _generateGitCSV = function(statistics) {
   var csvData =  _.map(statistics, function(val) {
     return {
       Name: val.author,
@@ -148,7 +148,7 @@ var _generateCSV = function(statistics) {
       NetLines: val.netLines,
       LinesAdded: val.noOfAdditions,
       LinesDeleted: val.noOfDeletions
-    }
+    };
   });
   var fields = csvData.length ? _.keys(csvData[0]) : [];
 
@@ -166,5 +166,31 @@ var _generateCSV = function(statistics) {
   });
 };
 
+var _generatePlanIoCSV = function(statistics) {
+  var csvData =  _.map(statistics, function(val) {
+    return {
+      Name: val.author,
+      Developed: val.developed,
+      Closed: val.closed,
+      Deployed: val.deployed
+    };
+  });
+  var fields = csvData.length ? _.keys(csvData[0]) : [];
+
+  var fileName = 'planio-stats-' + moment().unix() + '.csv';
+  return new Promise(function(resolve, reject) {
+    json2CSV( {data: csvData, fields: fields}, function(err, csv) {
+      if (err)
+        return reject(err);
+      fs.writeFile(fileName, csv, function(_err) {
+        if (_err)
+          return reject(_err)
+        return resolve(fileName);
+      })
+    });
+  });
+};
+
 module.exports.createCharts = _createCharts;
-module.exports.generateCSV = _generateCSV;
+module.exports.generateGitCSV = _generateGitCSV;
+module.exports.generatePlanIoCSV = _generatePlanIoCSV;
