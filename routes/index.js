@@ -55,11 +55,11 @@ var sendEmail = function(chartNames, duration) {
 var _calculateDuration = function(period) {
   var result = {};
   if (period === 'weekly')
-    result.fromDate   = moment.utc().subtract(1, 'week').format();
+    result.fromDate   = moment.utc().subtract(1, 'week').startOf('day').format();
   else if (period === 'monthly')
-    result.fromDate = moment.utc().subtract(1, 'month').format();
+    result.fromDate = moment.utc().subtract(1, 'month').startOf('day').format();
   else if (period === 'daily')
-    result.fromDate = moment.utc().subtract(1, 'day').format();
+    result.fromDate = moment.utc().subtract(1, 'day').startOf('day').format();
 
   result.title = period;
   result.toDate = moment.utc().format();
@@ -84,12 +84,25 @@ router.get('/statistics', function(req,res) {
   }).then(function() {
     console.log('email sent with attachments');
     if (req.query.format === 'csv'){
-      return App.modules.output.generateCSV(statistics).then(function(file) {
+      return App.modules.output.generateGitCSV(statistics).then(function(file) {
         res.download(file, 'stats.csv');
       });
     }
     return res.json(statistics);
 
+  }).catch(function(error) {
+    res.status(500).json(error.stack ? error.stack : error);
+  });
+});
+
+router.get('/statistics-planio', function(req, res) {
+  var duration = _calculateDuration(req.query.period);
+  return App.modules.planIO.calculate(duration).then(function(statistics) {
+    if (req.query.format === 'csv')
+      return App.modules.output.generatePlanIoCSV(statistics).then(function(file) {
+        res.download(file, 'planio-stats.csv');
+      });
+    res.json(statistics);
   }).catch(function(error) {
     res.status(500).json(error.stack ? error.stack : error);
   });
