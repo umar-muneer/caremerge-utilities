@@ -85,7 +85,7 @@ var _calculate = function(period, issues, issueStatuses) {
       var developedJournal = _.find(developedJournals, function(dj) {
         return !_.find(unDevelopedJournals, function(udj) {
           return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
-              return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
+              return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id || detail.new_value == issueStatuses.Feedback.id);
             });
         }) && getDateObject(dj.created_on).unix() === maxDevelopedTime;
       });
@@ -119,7 +119,7 @@ var _calculate = function(period, issues, issueStatuses) {
       var deployedJournal = _.find(deployedJournals, function(dj) {
         return !_.find(unDeployedJournals, function(udj) {
             return getDateObject(udj.created_on) >= getDateObject(dj.created_on) && _.find(udj.details, function(detail) {
-                return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id);
+                return detail.name === 'status_id' && (detail.new_value == issueStatuses.New.id || detail.new_value == issueStatuses.ReOpen.id || detail.new_value == issueStatuses.Feedback.id);
               });
           }) && getDateObject(dj.created_on).unix() === maxDeployedTime;
       });
