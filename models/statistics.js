@@ -49,7 +49,7 @@ module.exports = function(sequelize, DataTypes) {
             return Promise.all(members);
         });
       },
-      calculateTeamMemberStats: function(member, fromDate, toDate) {
+      calculateTeamMemberStats: function(member, fromDate, toDate, pullRequests) {
         var _this = this;
         var calculateCommitStats = function() {
           return _this.findAll({
@@ -86,28 +86,28 @@ module.exports = function(sequelize, DataTypes) {
         };
 
         var calculatePullRequestStats = function() {
-          return _this.findAll({
-            where: {
-              author: member.login,
-              type: 'pullrequest',
-              createdAt: {
-                $gt: fromDate,
-                $lt: toDate
-              }
-            },
-            order: [['author', 'ASC']]
-          }).then(function(pullrequests) {
-            var openedPullRequests = _.filter(pullrequests, function(pr) {
-              return pr.data.action === 'opened';
-            });
-            var closedPullRequests = _.filter(pullrequests, function(pr) {
-              return pr.data.action === 'closed';
-            });
-            return {
-              opened: openedPullRequests.length,
-              closed: closedPullRequests.length
-            };
-          })
+          var opened = _.filter(pullRequests, function(pr) {
+            return pr.data.action === 'opened' && pr.author === member.login;
+          }).length;
+          var closed = _.filter(pullRequests, function(pr) {
+            return pr.data.action === 'closed' && pr.author === member.login && pr.data.pullRequest.merged !== true;
+          }).length;
+          var mergedByOther = _.filter(pullRequests, function(pr) {
+            return pr.author !== member.login && pr.data.action === 'closed' && pr.data.pullRequest.user.login === member.login && pr.data.pullRequest.merged === true;
+          }).length;
+          var mergedOwn = _.filter(pullRequests, function(pr) {
+            return pr.author === member.login && pr.data.action === 'closed' && pr.data.pullRequest.user.login === member.login && pr.data.pullRequest.merged === true;
+          }).length;
+          var mergedOthers = _.filter(pullRequests, function(pr) {
+            return pr.author === member.login && pr.data.action === 'closed' && pr.data.pullRequest.user.login !== member.login && pr.data.pullRequest.merged === true;
+          }).length;
+          return {
+            opened: opened,
+            closed: closed,
+            mergedOwn: mergedOwn,
+            mergedByOther: mergedByOther,
+            mergedOthers: mergedOthers
+          };
         };
 
         var result = {};
@@ -122,10 +122,22 @@ module.exports = function(sequelize, DataTypes) {
       },
       calculateTeamStats: function(team, fromDate, toDate) {
         var _this = this;
-        var teamStats = _.map(team, function(member) {
-          return _this.calculateTeamMemberStats(member, fromDate, toDate);
+
+        return _this.findAll({
+          where: {
+            type: 'pullrequest',
+            createdAt: {
+              $gt: fromDate,
+              $lt: toDate
+            }
+          },
+          order: [['author', 'ASC']]
+        }).then(function(pullRequests) {
+          var teamStats = _.map(team, function(member) {
+            return _this.calculateTeamMemberStats(member, fromDate, toDate, pullRequests);
+          });
+          return Promise.all(teamStats);
         });
-        return Promise.all(teamStats);
       },
       calculate: function(data) {
         var _this = this;
