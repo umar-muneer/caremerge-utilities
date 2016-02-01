@@ -76,7 +76,7 @@ router.get('/statistics', function(req,res) {
     statistics = result;
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve([]);
-    return App.modules.output.createCharts(statistics);
+    return App.modules.output.createCharts(statistics, req.query.period);
   }).then(function(chartNames){
     console.log('successfully plotted all charts');
     if (process.env.NODE_ENV === 'test')

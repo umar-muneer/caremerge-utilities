@@ -8,7 +8,7 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var moment = require('moment');
 
-var _createCharts = function(statistics) {
+var _createCharts = function(statistics, period) {
   var _create = function(data) {
     var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
     var imgOpts = {
@@ -52,6 +52,7 @@ var _createCharts = function(statistics) {
     });
   };
   var pullRequests = _.pluck(statistics, 'pullRequest');
+  var linesCap = period === 'monthly' ? 12000 : 3000;
   var chartData = {
       commits: {
         x: _.pluck(statistics, 'author'),
@@ -70,7 +71,7 @@ var _createCharts = function(statistics) {
       netChanges: {
         x: _.pluck(statistics, 'author'),
         y: _.map(_.pluck(statistics , 'netChanges'), function(value) {
-          return value>3000 ? 3000 : value;
+          return value>linesCap ? linesCap : value;
         }),
         type: 'bar',
         file: 'netchanges.png',
@@ -79,7 +80,7 @@ var _createCharts = function(statistics) {
       linesAdded: {
         x: _.pluck(statistics, 'author'),
         y: _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
-          return value>3000 ? 3000 : value;
+          return value>linesCap ? linesCap : value;
         }),
         type: 'bar',
         file: 'noofadditions.png',
@@ -88,7 +89,7 @@ var _createCharts = function(statistics) {
       linesDeleted: {
         x: _.pluck(statistics, 'author'),
         y: _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
-          return value>3000 ? 3000 : value;
+          return value>linesCap ? linesCap : value;
         }),
         type: 'bar',
         file: 'noofdeletions.png',
@@ -97,7 +98,7 @@ var _createCharts = function(statistics) {
       netLines: {
         x: _.pluck(statistics, 'author'),
         y: _.map(_.pluck(statistics , 'netLines'), function(value) {
-          return value>3000 ? 3000 : value;
+          return value>linesCap ? linesCap : value;
         }),
         type: 'bar',
         file: 'netlines.png',
