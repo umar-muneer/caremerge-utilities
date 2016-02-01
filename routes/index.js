@@ -1,3 +1,4 @@
+/* global App */
 var express = require('express');
 var router = express.Router();
 var Promise = require('bluebird')
@@ -101,6 +102,7 @@ router.get('/statistics-planio', function(req, res) {
     if (req.query.format === 'csv')
       return App.modules.output.generatePlanIoCSV(statistics).then(function(file) {
         res.download(file, 'planio-stats.csv');
+        console.log('plan-io complete');
       });
     res.json(statistics);
   }).catch(function(error) {

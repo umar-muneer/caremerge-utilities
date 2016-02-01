@@ -47,7 +47,6 @@ var _getAllIssues = function(period) {
       .query({key: process.env.PLAN_IO_API_KEY, project_id: process.env.PLAN_IO_PROJECT_ID, include: 'journals'})
       .endAsync()
       .then(function(response) {
-        console.log('retrieved an individual issue with id -> ', response.body.issue.id);
         return response.body.issue;
       });
   };
