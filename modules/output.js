@@ -9,9 +9,8 @@ var _ = require('lodash');
 var moment = require('moment');
 
 var _createCharts = function(statistics) {
-  var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
-
-  var _create = function(data, chartName, title) {
+  var _create = function(data) {
+    var chart = plotly(process.env.PLOTLY_USERNAME, process.env.PLOTLY_APIKEY);
     var imgOpts = {
       format: 'png',
       width: 1280,
@@ -34,7 +33,7 @@ var _createCharts = function(statistics) {
       return data.y != 0;
     });
     var layout = {
-      title: title,
+      title: data.title,
       annotations: annotations
     };
     var figure = {data: [data], layout: layout};
@@ -44,96 +43,107 @@ var _createCharts = function(statistics) {
           reject();
           return console.log (error);
         };
-        var fileStream = fs.createWriteStream(chartName);
+        var fileStream = fs.createWriteStream(data.file);
         fileStream.on('finish', function() {
-          resolve(chartName);
+          resolve(data.file);
         });
         imageStream.pipe(fileStream);
       });
     });
   };
-  var _commitsChart = function() {
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics, 'noOfCommits'),
-      type: 'bar'
-    };
-    return _create(data, 'commits.png', 'Commits');
+  var pullRequests = _.pluck(statistics, 'pullRequest');
+  var chartData = {
+      commits: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics, 'noOfCommits'),
+        type: 'bar',
+        file: 'commits.png',
+        title: 'Commits'
+      },
+      filesChanged: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics , 'noOfFilesChanged'),
+        type: 'bar',
+        file: 'fileschanged.png',
+        title: 'No. of Files Changed'
+      },
+      netChanges: {
+        x: _.pluck(statistics, 'author'),
+        y: _.map(_.pluck(statistics , 'netChanges'), function(value) {
+          return value>3000 ? 3000 : value;
+        }),
+        type: 'bar',
+        file: 'netchanges.png',
+        title: 'Net Changes'
+      },
+      linesAdded: {
+        x: _.pluck(statistics, 'author'),
+        y: _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
+          return value>3000 ? 3000 : value;
+        }),
+        type: 'bar',
+        file: 'noofadditions.png',
+        title: 'No. Of Additions'
+      },
+      linesDeleted: {
+        x: _.pluck(statistics, 'author'),
+        y: _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
+          return value>3000 ? 3000 : value;
+        }),
+        type: 'bar',
+        file: 'noofdeletions.png',
+        title: 'No. Of Deletions'
+      },
+      netLines: {
+        x: _.pluck(statistics, 'author'),
+        y: _.map(_.pluck(statistics , 'netLines'), function(value) {
+          return value>3000 ? 3000 : value;
+        }),
+        type: 'bar',
+        file: 'netlines.png',
+        title: 'Net Lines'
+      },
+      openedPrs: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(pullRequests, 'opened'),
+          type: 'bar',
+          file: 'pullrequestsopened.png',
+          title: 'Opened Pull Requests'
+      },
+      closedPrs: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(pullRequests, 'closed'),
+          type: 'bar',
+          file: 'pullrequestsclosed.png',
+          title: 'Closed Pull Requests'
+      },
+      mergedOwnPrs: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(pullRequests, 'mergedOwn'),
+          type: 'bar',
+          file: 'ownpullrequestsmerged.png',
+          title: 'Own Pull Requests Merged'
+      },
+      mergedOthersPrs: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(pullRequests, 'mergedOthers'),
+          type: 'bar',
+          file: 'otherspullrequestsmerged.png',
+          title: 'Others Pull Requests Merged By You'
+      },
+      mergedByOtherPrs: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(pullRequests, 'mergedByOther'),
+        type: 'bar',
+        file: 'mergedbyotherspullrequests.png',
+        title: 'Your Pull Requests Merged By Someone else'
+      }
   };
-
-  var _openedPullRequests = function() {
-    var openedPullRequestData = {
-      x: _.pluck(statistics, 'author'),
-      y: _.pluck(_.pluck(statistics, 'pullRequest') , 'opened'),
-      type: 'bar'
-    };
-    return _create(openedPullRequestData, 'pullrequestsopened.png', 'Pull Requests Opened');
-  };
-
-  var _closedPullRequests = function() {
-    var closedPullRequestData = {
-      x: _.pluck(statistics, 'author'),
-      y: _.pluck(_.pluck(statistics, 'pullRequest') , 'closed'),
-      type: 'bar'
-    };
-    return _create(closedPullRequestData, 'pullrequestsclosed.png', 'Closed Pull Requests');
-  };
-  var _filesChangedChart = function() {
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: _.pluck(statistics , 'noOfFilesChanged'),
-      type: 'bar'
-    };
-    return _create(data, 'fileschanged.png', 'Files Changed');
-  };
-
-  var _netChangesChart = function() {
-    var yAxis = _.map(_.pluck(statistics , 'netChanges'), function(value) {
-      return value>3000 ? 3000 : value;
-    });
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: yAxis,
-      type: 'bar'
-    };
-    return _create(data, 'netchanges.png', 'Net Changes');
-  };
-  var _linesAddedChart = function() {
-    var yAxis = _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
-      return value>3000 ? 3000 : value;
-    });
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: yAxis,
-      type: 'bar'
-    };
-    return _create(data, 'additions.png', 'Lines Added');
-  };
-
-  var _linesDeletedChart = function() {
-    var yAxis = _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
-      return value>3000 ? 3000 : value;
-    });
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: yAxis,
-      type: 'bar'
-    };
-    return _create(data, 'deletions.png', 'Lines Deleted');
-  };
-
-  var _netLinesChart = function() {
-    var yAxis = _.map(_.pluck(statistics , 'netLines'), function(value) {
-      return value>3000 ? 3000 : value;
-    });
-    var data = {
-      x: _.pluck(statistics, 'author'),
-      y: yAxis,
-      type: 'bar'
-    };
-    return _create(data, 'netlines.png', 'Net Lines');
-  };
-  return Promise.all([_commitsChart(), _openedPullRequests(), _closedPullRequests(), _netChangesChart(), _linesAddedChart(), _linesDeletedChart(), _filesChangedChart(), _netLinesChart()]);
+  
+  var charts = _.map(_.keys(chartData), function(key) {
+    return _create(chartData[key]);
+  });
+  return Promise.all(charts);
 };
 
 var _generateGitCSV = function(statistics) {
