@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var http = require('http');
 var routes = require('./routes/index');
-
+var timeout = require('connect-timeout');
 var app = express();
 
 // view engine setup
@@ -53,6 +53,8 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
+
+app.use(timeout(120000));
 
 http.globalAgent.maxSockets = 50;
 
