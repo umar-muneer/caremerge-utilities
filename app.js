@@ -55,6 +55,11 @@ app.use(function(err, req, res, next) {
 });
 
 app.use(timeout(120000));
+app.use(haltOnTimedout);
+
+function haltOnTimedout(req, res, next){
+  if (!req.timedout) next();
+}
 
 http.globalAgent.maxSockets = 50;
 
