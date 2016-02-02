@@ -1,0 +1,21 @@
+{
+  "extends":"airbnb/legacy",
+  "env":{
+    "node":true,
+    "mocha":true
+  },
+  "rules":{
+    "new-cap":[2, {"capIsNew":false, "newIsCap":false}],
+    "comma-dangle":[2, "never"],
+    "func-names":0,
+    "no-multi-spaces":0,
+    "no-console":0,
+    "eol-last":0,
+    "curly":[2, "multi"],
+    "vars-on-top":1,
+    "no-unused-expressions":[0]
+  },
+  "globals":{
+    "App":true
+  }
+}
