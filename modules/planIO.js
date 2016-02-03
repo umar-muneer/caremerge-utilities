@@ -54,7 +54,6 @@ var _getAllIssues = function(period) {
     var allIssues =  _.flatten(_.map(result, function(r) {
       return r.issues;
     }));
-
     return Promise.all(_.map(allIssues, function(issue) {
       return _getIssue(issue);
     }));

@@ -28,7 +28,6 @@ var _createCharts = function(statistics, period) {
         yanchor: val[1] < 0 ? 'top' : 'bottom'
       };
     });
-
     annotations = _.filter(annotations, function(data) {
       return data.y != 0;
     });
@@ -51,100 +50,136 @@ var _createCharts = function(statistics, period) {
       });
     });
   };
-  var pullRequests = _.pluck(statistics, 'pullRequest');
-  var linesCap = period === 'monthly' ? 12000 : 3000;
-  var chartData = {
-      commits: {
-        x: _.pluck(statistics, 'author'),
-        y: _.pluck(statistics, 'noOfCommits'),
-        type: 'bar',
-        file: 'commits.png',
-        title: 'Commits'
-      },
-      filesChanged: {
-        x: _.pluck(statistics, 'author'),
-        y: _.pluck(statistics , 'noOfFilesChanged'),
-        type: 'bar',
-        file: 'fileschanged.png',
-        title: 'No. of Files Changed'
-      },
-      netChanges: {
-        x: _.pluck(statistics, 'author'),
-        y: _.map(_.pluck(statistics , 'netChanges'), function(value) {
-          return value>linesCap ? linesCap : value;
-        }),
-        type: 'bar',
-        file: 'netchanges.png',
-        title: 'Net Changes'
-      },
-      linesAdded: {
-        x: _.pluck(statistics, 'author'),
-        y: _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
-          return value>linesCap ? linesCap : value;
-        }),
-        type: 'bar',
-        file: 'noofadditions.png',
-        title: 'No. Of Additions'
-      },
-      linesDeleted: {
-        x: _.pluck(statistics, 'author'),
-        y: _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
-          return value>linesCap ? linesCap : value;
-        }),
-        type: 'bar',
-        file: 'noofdeletions.png',
-        title: 'No. Of Deletions'
-      },
-      netLines: {
-        x: _.pluck(statistics, 'author'),
-        y: _.map(_.pluck(statistics , 'netLines'), function(value) {
-          return value>linesCap ? linesCap : value;
-        }),
-        type: 'bar',
-        file: 'netlines.png',
-        title: 'Net Lines'
-      },
-      openedPrs: {
-          x: _.pluck(statistics, 'author'),
-          y: _.pluck(pullRequests, 'opened'),
-          type: 'bar',
-          file: 'pullrequestsopened.png',
-          title: 'Opened Pull Requests'
-      },
-      closedPrs: {
-          x: _.pluck(statistics, 'author'),
-          y: _.pluck(pullRequests, 'closed'),
-          type: 'bar',
-          file: 'pullrequestsclosed.png',
-          title: 'Closed Pull Requests'
-      },
-      mergedOwnPrs: {
-          x: _.pluck(statistics, 'author'),
-          y: _.pluck(pullRequests, 'mergedOwn'),
-          type: 'bar',
-          file: 'ownpullrequestsmerged.png',
-          title: 'Own Pull Requests Merged'
-      },
-      mergedOthersPrs: {
-          x: _.pluck(statistics, 'author'),
-          y: _.pluck(pullRequests, 'mergedOthers'),
-          type: 'bar',
-          file: 'otherspullrequestsmerged.png',
-          title: 'Others Pull Requests Merged By You'
-      },
-      mergedByOtherPrs: {
-        x: _.pluck(statistics, 'author'),
-        y: _.pluck(pullRequests, 'mergedByOther'),
-        type: 'bar',
-        file: 'mergedbyotherspullrequests.png',
-        title: 'Your Pull Requests Merged By Someone else'
-      }
-  };
   
-  var charts = _.map(_.keys(chartData), function(key) {
-    return _create(chartData[key]);
-  });
-  return Promise.all(charts);
+  var _git = function() {
+    var pullRequests = _.pluck(statistics, 'pullRequest');
+    var linesCap = period === 'monthly' ? 12000 : 3000;
+    var chartData = {
+        commits: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(statistics, 'noOfCommits'),
+          type: 'bar',
+          file: 'commits.png',
+          title: 'Commits'
+        },
+        filesChanged: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(statistics , 'noOfFilesChanged'),
+          type: 'bar',
+          file: 'fileschanged.png',
+          title: 'No. of Files Changed'
+        },
+        netChanges: {
+          x: _.pluck(statistics, 'author'),
+          y: _.map(_.pluck(statistics , 'netChanges'), function(value) {
+            return value>linesCap ? linesCap : value;
+          }),
+          type: 'bar',
+          file: 'netchanges.png',
+          title: 'Net Changes'
+        },
+        linesAdded: {
+          x: _.pluck(statistics, 'author'),
+          y: _.map(_.pluck(statistics , 'noOfAdditions'), function(value) {
+            return value>linesCap ? linesCap : value;
+          }),
+          type: 'bar',
+          file: 'noofadditions.png',
+          title: 'No. Of Additions'
+        },
+        linesDeleted: {
+          x: _.pluck(statistics, 'author'),
+          y: _.map(_.pluck(statistics , 'noOfDeletions'), function(value) {
+            return value>linesCap ? linesCap : value;
+          }),
+          type: 'bar',
+          file: 'noofdeletions.png',
+          title: 'No. Of Deletions'
+        },
+        netLines: {
+          x: _.pluck(statistics, 'author'),
+          y: _.map(_.pluck(statistics , 'netLines'), function(value) {
+            return value>linesCap ? linesCap : value;
+          }),
+          type: 'bar',
+          file: 'netlines.png',
+          title: 'Net Lines'
+        },
+        openedPrs: {
+            x: _.pluck(statistics, 'author'),
+            y: _.pluck(pullRequests, 'opened'),
+            type: 'bar',
+            file: 'pullrequestsopened.png',
+            title: 'Opened Pull Requests'
+        },
+        closedPrs: {
+            x: _.pluck(statistics, 'author'),
+            y: _.pluck(pullRequests, 'closed'),
+            type: 'bar',
+            file: 'pullrequestsclosed.png',
+            title: 'Closed Pull Requests'
+        },
+        mergedOwnPrs: {
+            x: _.pluck(statistics, 'author'),
+            y: _.pluck(pullRequests, 'mergedOwn'),
+            type: 'bar',
+            file: 'ownpullrequestsmerged.png',
+            title: 'Own Pull Requests Merged'
+        },
+        mergedOthersPrs: {
+            x: _.pluck(statistics, 'author'),
+            y: _.pluck(pullRequests, 'mergedOthers'),
+            type: 'bar',
+            file: 'otherspullrequestsmerged.png',
+            title: 'Others Pull Requests Merged By You'
+        },
+        mergedByOtherPrs: {
+          x: _.pluck(statistics, 'author'),
+          y: _.pluck(pullRequests, 'mergedByOther'),
+          type: 'bar',
+          file: 'mergedbyotherspullrequests.png',
+          title: 'Your Pull Requests Merged By Someone else'
+        }
+      };
+      var charts = _.map(_.keys(chartData), function(key) {
+        return _create(chartData[key]);
+      });
+      return Promise.all(charts);
+  }; 
+  var _planIO = function() {
+    var chartData = {
+      developed: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics, 'developed'),
+        type: 'bar',
+        file: 'pideveloped.png',
+        title: 'Tickets Developed'
+      },
+      deployed: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics, 'deployed'),
+        type: 'bar',
+        file: 'pideployed.png',
+        title: 'Tickets Deployed'
+      },
+      closed: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics, 'closed'),
+        type: 'bar',
+        file: 'piclosed.png',
+        title: 'Tickets Closed'
+      }
+    };
+    var charts = _.map(_.keys(chartData), function(key) {
+      return _create(chartData[key]);
+    });
+    return Promise.all(charts);
+  };
+ 
+  return {
+    git: _git,
+    planIO: _planIO
+  };
 };
 
 var _generateGitCSV = function(statistics) {

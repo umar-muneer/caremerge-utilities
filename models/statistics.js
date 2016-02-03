@@ -35,18 +35,13 @@ module.exports = function(sequelize, DataTypes) {
       },
       getTeamMembers: function(organization, teamName) {
         return Promise.bind(this).then(function() {
-          return this.getCaremergeTeamId(organization, teamName);  
+          return this.getCaremergeTeamId(organization, teamName); 
         }).then(function(teamId) {
           return request(urlJoin(App.baseUrl, 'teams', teamId, 'members'))
             .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
-            .endAsync()
-          }).then(function(response) {
-            var members = _.map(response.body, function(member) {
-              return this.getMemberName(member.login).then(function(result) {
-                return _.extend(member, {name: result});
-              });
-            }, this);
-            return Promise.all(members);
+            .endAsync();
+        }).then(function(response) {
+          return response.body;
         });
       },
       calculateTeamMemberStats: function(member, fromDate, toDate, pullRequests) {
