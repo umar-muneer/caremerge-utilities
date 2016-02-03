@@ -51,9 +51,15 @@ var sendEmail = function(chartNames, duration) {
     return mailer.messages().send(data);
   });
 };
-var _calculateDuration = function(period) {
+var _calculateDuration = function(query) {
+  var period = query.period;
   var result = {};
-  if (period === 'weekly')
+  
+  if (query.fromDate && query.toDate) {
+    result.fromDate = moment.utc(query.fromDate, 'DD-MM-YYYY').format();
+    result.toDate = moment.utc(query.toDate, 'DD-MM-YYYY').format();
+  }
+  else if (period === 'weekly')
     result.fromDate   = moment.utc().subtract(1, 'week').startOf('day').format();
   else if (period === 'monthly')
     result.fromDate = moment.utc().subtract(1, 'month').startOf('day').format();
@@ -61,7 +67,7 @@ var _calculateDuration = function(period) {
     result.fromDate = moment.utc().subtract(1, 'day').startOf('day').format();
 
   result.title = period;
-  result.toDate = moment.utc().format();
+  result.toDate = result.toDate || moment.utc().format();
 
   return result;
 };
@@ -102,7 +108,7 @@ var _mapEmployeeNames = function(stats) {
 };
 router.get('/statistics', function(req,res) {
   var statistics = {};
-  var duration = _calculateDuration(req.query.period);
+  var duration = _calculateDuration(req.query);
 
   req.query.format = req.query.format || 'json';
   return App.models.statistics.calculate(duration).then(function(result) {
@@ -130,7 +136,7 @@ router.get('/statistics', function(req,res) {
 });
 
 router.get('/statistics-planio', function(req, res) {
-  var duration = _calculateDuration(req.query.period);
+  var duration = _calculateDuration(req.query);
   var statistics = {};
   req.query.format = req.query.format || 'json';
   return App.modules.planIO.calculate(duration).then(function(result) {
