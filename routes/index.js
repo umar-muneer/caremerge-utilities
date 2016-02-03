@@ -106,13 +106,27 @@ var _mapEmployeeNames = function(stats) {
     stat.author = map[stat.author] || stat.author;
   });
 };
+
+var filterBlackList = function(statistics) {
+  var blackList = ['ashhar-saeed', 'gerrymiller', 'fahad-aziz', 'Raziah'];
+  return _.filter(statistics, function(stat) {
+    return !_.contains(blackList, stat.author);
+  });
+};
+/*
+@apiParam period weekly | monthly | daily
+@apiParam fromDate
+@apiParam toDate
+@apiParam linesCap
+@apiParam emailRecipient 
+*/
 router.get('/statistics', function(req,res) {
   var statistics = {};
   var duration = _calculateDuration(req.query);
 
   req.query.format = req.query.format || 'json';
   return App.models.statistics.calculate(duration).then(function(result) {
-    statistics = result;
+    statistics = filterBlackList(result);
     _mapEmployeeNames(statistics);
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve([]); 
@@ -134,7 +148,12 @@ router.get('/statistics', function(req,res) {
     res.status(500).json(error.stack ? error.stack : error);
   });
 });
-
+/*
+@apiParam period weekly | monthly | daily
+@apiParam fromDate
+@apiParam toDate
+@apiParam emailRecipient 
+*/
 router.get('/statistics-planio', function(req, res) {
   var duration = _calculateDuration(req.query);
   var statistics = {};
