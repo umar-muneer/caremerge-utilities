@@ -153,5 +153,4 @@ router.get('/statistics-planio', function(req, res) {
     res.status(500).json(error.stack ? error.stack : error);
   });
 });
-
 module.exports = router;
