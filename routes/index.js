@@ -66,7 +66,7 @@ var _calculateDuration = function(query) {
   else if (period === 'daily')
     result.fromDate = moment.utc().subtract(1, 'day').startOf('day').format();
 
-  result.title = period;
+  result.title = period || 'period';
   result.toDate = result.toDate || moment.utc().format();
 
   return result;
