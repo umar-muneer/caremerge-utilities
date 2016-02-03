@@ -51,9 +51,9 @@ var _createCharts = function(statistics, period) {
     });
   };
   
-  var _git = function() {
+  var _git = function(linesCap) {
     var pullRequests = _.pluck(statistics, 'pullRequest');
-    var linesCap = period === 'monthly' ? 12000 : 3000;
+    linesCap = parseInt(linesCap) || (period === 'monthly' ? 12000 : 3000);
     var chartData = {
         commits: {
           x: _.pluck(statistics, 'author'),

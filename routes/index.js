@@ -24,7 +24,7 @@ router.post('/githooks/pullrequest', function (req,res) {
   res.status(200).end();
 });
 
-var sendEmail = function(chartNames, duration) {
+var sendEmail = function(recipient, chartNames, duration) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
   var attachmentPromises = _.map(chartNames, function(chartName) {
     return new Promise(function(resolve, reject) {
@@ -43,7 +43,7 @@ var sendEmail = function(chartNames, duration) {
     var subject = inflection.capitalize(duration.title) + ' Stats: ' + fromDate + ' to ' + toDate
     var data = {
       from: process.env.CM_EMAIL_SENDER,
-      to: process.env.CM_EMAIL_RECIPIENT,
+      to: recipient || process.env.CM_EMAIL_RECIPIENT,
       subject: subject,
       text: 'Developer statistics for the given period',
       attachment: attachments
@@ -116,12 +116,12 @@ router.get('/statistics', function(req,res) {
     _mapEmployeeNames(statistics);
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve([]); 
-    return App.modules.output.createCharts(statistics, req.query.period).git();
+    return App.modules.output.createCharts(statistics, req.query.period).git(req.query.linesCap);
   }).then(function(chartNames) {
     console.log('successfully plotted all charts');
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve({});
-    return sendEmail(chartNames, duration);
+    return sendEmail(req.query.emailRecipient, chartNames, duration);
   }).then(function() {
     console.log('email sent with attachments');
     if (req.query.format === 'csv'){
@@ -147,7 +147,7 @@ router.get('/statistics-planio', function(req, res) {
   }).then(function(chartNames) {
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve();
-    return sendEmail(chartNames, duration);
+    return sendEmail(req.query.emailRecipient, chartNames, duration);
   }).then(function() {
     if (req.query.format === 'csv')
       return App.modules.output.generatePlanIoCSV(statistics).then(function(file) {
