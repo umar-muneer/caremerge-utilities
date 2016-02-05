@@ -24,9 +24,9 @@ router.post('/githooks/pullrequest', function (req,res) {
   res.status(200).end();
 });
 
-var sendEmail = function(recipient, chartNames, duration) {
+var sendEmail = function(recipient, attachments, duration) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
-  var attachmentPromises = _.map(chartNames, function(chartName) {
+  var attachmentPromises = _.map(attachments, function(chartName) {
     return new Promise(function(resolve, reject) {
       fs.readFile(chartName, function(err, data) {
         if (err)
@@ -121,31 +121,34 @@ var filterBlackList = function(statistics) {
 @apiParam emailRecipient 
 */
 router.get('/statistics', function(req,res) {
-  var statistics = {};
   var duration = _calculateDuration(req.query);
-
   req.query.format = req.query.format || 'json';
-  return App.models.statistics.calculate(duration).then(function(result) {
-    statistics = filterBlackList(result);
-    _mapEmployeeNames(statistics);
+  return Promise.bind(this).then(function() {
+    res.json('Your request is being processed');
+    return App.models.statistics.calculate(duration);
+  }).then(function(result) {
+    this.statistics = filterBlackList(result);;
+    _mapEmployeeNames(this.statistics);
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve([]); 
-    return App.modules.output.createCharts(statistics, req.query.period).git(req.query.linesCap);
+    return App.modules.output.createCharts(this.statistics, req.query.period).git();
   }).then(function(chartNames) {
     console.log('successfully plotted all charts');
+    this.emailAttachments = chartNames;
+    if (req.query.format === 'csv')
+      return App.modules.output.generateGitCSV(this.statistics);
+    return Promise.resolve({});
+  }).then(function(csvFile) {
+    console.log('successfully generated csv file');
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve({});
-    return sendEmail(req.query.emailRecipient, chartNames, duration);
+    if (!_.isEmpty(csvFile))
+      this.emailAttachments.push(csvFile);
+    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration);
   }).then(function() {
-    console.log('email sent with attachments');
-    if (req.query.format === 'csv'){
-      return App.modules.output.generateGitCSV(statistics).then(function(file) {
-        res.download(file, 'stats.csv');
-      });
-    }
-    return res.json(statistics);
+    console.log('sending results email');
   }).catch(function(error) {
-    res.status(500).json(error.stack ? error.stack : error);
+    console.log(error.stack ? error.stack : error);
   });
 });
 /*
@@ -158,24 +161,28 @@ router.get('/statistics-planio', function(req, res) {
   var duration = _calculateDuration(req.query);
   var statistics = {};
   req.query.format = req.query.format || 'json';
-  return App.modules.planIO.calculate(duration).then(function(result) {
-    statistics = result;
+  
+  return Promise.bind(this).then(function() {
+    res.json('your request is being processed');
+    return App.modules.planIO.calculate(duration);
+  }).then(function(result) {
+    this.statistics = result;
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve({});
-    return App.modules.output.createCharts(statistics, req.query.period).planIO();
+    return App.modules.output.createCharts(this.statistics, req.query.period).planIO();
   }).then(function(chartNames) {
+    this.emailAttachments = chartNames;
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve();
-    return sendEmail(req.query.emailRecipient, chartNames, duration);
-  }).then(function() {
-    if (req.query.format === 'csv')
-      return App.modules.output.generatePlanIoCSV(statistics).then(function(file) {
-        res.download(file, 'planio-stats.csv');
-        console.log('plan-io complete');
-      });
-    res.json(statistics);
+    if (req.query.format !== 'csv')
+      return Promise.resolve({});  
+    return App.modules.output.generatePlanIoCSV(this.statistics)
+  }).then(function(csvFile) {
+    if (!_.isEmpty(csvFile))
+      this.emailAttachments.push(csvFile);
+    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration);
   }).catch(function(error) {
-    res.status(500).json(error.stack ? error.stack : error);
+    console.log(error.stack ? error.stack : error);
   });
 });
 module.exports = router;
