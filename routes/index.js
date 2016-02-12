@@ -57,7 +57,7 @@ var _calculateDuration = function(query) {
   
   if (query.fromDate && query.toDate) {
     result.fromDate = moment.utc(query.fromDate, 'DD-MM-YYYY').format();
-    result.toDate = moment.utc(query.toDate, 'DD-MM-YYYY').format();
+    result.toDate = moment.utc(query.toDate, 'DD-MM-YYYY').add(1, 'day').format();
   }
   else if (period === 'weekly')
     result.fromDate   = moment.utc().subtract(1, 'week').startOf('day').format();
@@ -68,7 +68,6 @@ var _calculateDuration = function(query) {
 
   result.title = period || 'period';
   result.toDate = result.toDate || moment.utc().format();
-
   return result;
 };
 var _mapEmployeeNames = function(stats) {
