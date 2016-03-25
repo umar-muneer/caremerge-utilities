@@ -99,6 +99,7 @@ var _mapEmployeeNames = function(stats) {
     'sulemanahmed': 'Suleman Ahmed',
     'umar-muneer': 'Umar Muneer',
     'waleedwaseem': 'Waleed Waseem',
+    'chaudhryjunaid': 'Chaudhry Junaid Anwar',
     'yasiralicare': 'Yasir Ali'
   };
   _.each(stats, function(stat) {
