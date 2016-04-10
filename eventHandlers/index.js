@@ -90,7 +90,8 @@ module.exports.handleDumpEvent = function(eventName, payload) {
     eventName: eventName,
     payload: payload
   };
-  console.log('####', App.models);
+  console.log('####', App.models.dump);
+  console.log('####', App.models.statistics);
   return App.models.dump.create({
     data: data
   });
