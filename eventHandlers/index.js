@@ -90,6 +90,9 @@ module.exports.handleDumpEvent = function(eventName, payload) {
     eventName: eventName,
     payload: payload
   };
-  return App.models.dump.create(data);
+  console.log('####', App.models);
+  return App.models.dump.create({
+    data: data
+  });
 };
 module.exports.output = output;
