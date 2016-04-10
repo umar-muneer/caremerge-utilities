@@ -25,7 +25,7 @@ router.post('/githooks/pullrequest', function (req,res) {
 });
 
 router.post('/githooks/dump', function(req,res) {
-  eventHandlers.handleDumpEvent(req.body).then(function() {
+  eventHandlers.handleDumpEvent(req.get('X-GitHub-Event'), req.body).then(function() {
     res.status(200).end();  
   }).catch(function(error) {
     res.status(500).json(error);
