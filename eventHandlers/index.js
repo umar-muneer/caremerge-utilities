@@ -85,4 +85,11 @@ module.exports.handlePullRequestEvent = function(payload) {
   });
 };
 
+module.exports.handleDumpEvent = function(eventName, payload) {
+  var data = {
+    eventName: eventName,
+    payload: payload
+  };
+  return App.models.create(data);
+};
 module.exports.output = output;

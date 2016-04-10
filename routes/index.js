@@ -24,6 +24,14 @@ router.post('/githooks/pullrequest', function (req,res) {
   res.status(200).end();
 });
 
+router.post('/githooks/dump', function(req,res) {
+  eventHandlers.handleDumpEvent(req.body).then(function() {
+    res.status(200).end();  
+  }).catch(function(error) {
+    res.status(500).json(error);
+  });
+  
+});
 var sendEmail = function(recipient, attachments, duration) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
   var attachmentPromises = _.map(attachments, function(chartName) {
