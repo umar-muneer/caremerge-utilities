@@ -26,11 +26,11 @@ router.post('/githooks/pullrequest', function (req,res) {
 
 router.post('/githooks/dump', function(req,res) {
   eventHandlers.handleDumpEvent(req.get('X-GitHub-Event'), req.body).then(function() {
-    res.status(200).end();  
+    res.status(200).end();
   }).catch(function(error) {
     res.status(500).json(error);
   });
-  
+
 });
 var sendEmail = function(recipient, attachments, duration) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
@@ -62,7 +62,7 @@ var sendEmail = function(recipient, attachments, duration) {
 var _calculateDuration = function(query) {
   var period = query.period;
   var result = {};
-  
+
   if (query.fromDate && query.toDate) {
     result.fromDate = moment.utc(query.fromDate, 'DD-MM-YYYY').format();
     result.toDate = moment.utc(query.toDate, 'DD-MM-YYYY').add(1, 'day').format();
@@ -107,7 +107,8 @@ var _mapEmployeeNames = function(stats) {
     'sulemanahmed': 'Suleman Ahmed',
     'umar-muneer': 'Umar Muneer',
     'waleedwaseem': 'Waleed Waseem',
-    'chaudhryjunaid': 'Chaudhry Junaid Anwar',
+    'chaudhryjunaid': 'Junaid Anwar',
+    'SargeKhan': 'Usman Khan',
     'yasiralicare': 'Yasir Ali'
   };
   _.each(stats, function(stat) {
@@ -126,7 +127,7 @@ var filterBlackList = function(statistics) {
 @apiParam fromDate
 @apiParam toDate
 @apiParam linesCap
-@apiParam emailRecipient 
+@apiParam emailRecipient
 */
 router.get('/statistics', function(req,res) {
   var duration = _calculateDuration(req.query);
@@ -138,7 +139,7 @@ router.get('/statistics', function(req,res) {
     this.statistics = filterBlackList(result);;
     _mapEmployeeNames(this.statistics);
     if (process.env.NODE_ENV === 'test')
-      return Promise.resolve([]); 
+      return Promise.resolve([]);
     return App.modules.output.createCharts(this.statistics, req.query.period).git();
   }).then(function(chartNames) {
     console.log('successfully plotted all charts');
@@ -163,13 +164,13 @@ router.get('/statistics', function(req,res) {
 @apiParam period weekly | monthly | daily
 @apiParam fromDate
 @apiParam toDate
-@apiParam emailRecipient 
+@apiParam emailRecipient
 */
 router.get('/statistics-planio', function(req, res) {
   var duration = _calculateDuration(req.query);
   var statistics = {};
   req.query.format = req.query.format || 'json';
-  
+
   return Promise.bind(this).then(function() {
     res.json('your request is being processed');
     return App.modules.planIO.calculate(duration);
@@ -183,7 +184,7 @@ router.get('/statistics-planio', function(req, res) {
     if (process.env.NODE_ENV === 'test')
       return Promise.resolve();
     if (req.query.format !== 'csv')
-      return Promise.resolve({});  
+      return Promise.resolve({});
     return App.modules.output.generatePlanIoCSV(this.statistics)
   }).then(function(csvFile) {
     if (!_.isEmpty(csvFile))
