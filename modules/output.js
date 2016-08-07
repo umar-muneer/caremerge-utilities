@@ -50,7 +50,7 @@ var _createCharts = function(statistics, period) {
       });
     });
   };
-  
+
   var _git = function(linesCap) {
     var pullRequests = _.pluck(statistics, 'pullRequest');
     linesCap = parseInt(linesCap) || (period === 'monthly' ? 12000 : 3000);
@@ -145,7 +145,7 @@ var _createCharts = function(statistics, period) {
         return _create(chartData[key]);
       });
       return Promise.all(charts);
-  }; 
+  };
   var _planIO = function() {
     var chartData = {
       developed: {
@@ -168,6 +168,13 @@ var _createCharts = function(statistics, period) {
         type: 'bar',
         file: 'piclosed.png',
         title: 'Tickets Closed'
+      },
+      reOpened: {
+        x: _.pluck(statistics, 'author'),
+        y: _.pluck(statistics, 'closed'),
+        type: 'bar',
+        file: 'pireopened.png',
+        title: 'Tickets ReOpened'
       }
     };
     var charts = _.map(_.keys(chartData), function(key) {
@@ -175,7 +182,7 @@ var _createCharts = function(statistics, period) {
     });
     return Promise.all(charts);
   };
- 
+
   return {
     git: _git,
     planIO: _planIO
