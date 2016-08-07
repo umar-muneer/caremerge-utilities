@@ -201,7 +201,8 @@ var _calculate = function(period, issues, issueStatuses) {
         author: author,
         developed: authorData.developed ? authorData.developed.issues.length : 0,
         deployed: authorData.deployed ? authorData.deployed.issues.length : 0,
-        closed: authorData.closed ? authorData.closed.issues.length : 0
+        closed: authorData.closed ? authorData.closed.issues.length : 0,
+        reOpened: authorData.reOpened ? authorData.reOpened.issues.length: 0
       };
     });
   });
