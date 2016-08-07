@@ -164,6 +164,7 @@ router.get('/statistics', function(req,res) {
 @apiParam period weekly | monthly | daily
 @apiParam fromDate
 @apiParam toDate
+@apiParam format
 @apiParam emailRecipient
 */
 router.get('/statistics-planio', function(req, res) {
@@ -176,8 +177,10 @@ router.get('/statistics-planio', function(req, res) {
     return App.modules.planIO.calculate(duration);
   }).then(function(result) {
     this.statistics = result;
-    if (process.env.NODE_ENV === 'test')
+    if (process.env.NODE_ENV === 'test') {
+      console.log(result);
       return Promise.resolve({});
+    }
     return App.modules.output.createCharts(this.statistics, req.query.period).planIO();
   }).then(function(chartNames) {
     this.emailAttachments = chartNames;
