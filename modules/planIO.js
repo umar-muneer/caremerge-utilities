@@ -160,6 +160,35 @@ var _calculate = function(period, issues, issueStatuses) {
       statistics[lastClosedJournal.user.name] = entry;
     });
   };
+  var _calculateReopenStats = function() {
+    var reOpenedIssues = _.filter(issues, function(issue) {
+      return issue.status.id === issueStatuses.ReOpen.id;
+    });
+    _.each(reOpenedIssues, function(reOpenedIssue) {
+      var journalsInDateRange = _.filter(reOpenedIssue.journals, function(journal) {
+        return getDateObject(journal.created_on) >= getDateObject(period.fromDate);
+      });
+      var allReOpenedJournals = _.filter(journalsInDateRange, function(jidr) {
+        return _.filter(jidr.details, function(detailRecord) {
+          return detailRecord.name === 'status_id' && detailRecord.new_value
+        });
+      });
+      var maxReOpenTime = getDateObject(_.max(allReOpenedJournals, function(reopenedJournal) {
+        return getDateObject(reopenedJournal.created_on).unix();
+      }).created_on).unix();
+      var lastReOpenedJournal = _.find(allReOpenedJournals, function(reOpenedJournal) {
+        return getDateObject(reOpenedJournal.created_on).unix() === maxClosedTime;
+      });
+      if (!lastReOpenedJournal)
+        return;
+      var entry = statistics[lastClosedJournal.user.name] || {};
+      entry.reOpened = entry.reOpened || {};
+      entry.reOpened.issues = entry.reOpened.issues || [];
+      entry.reOpened.issues.push(issue.id);
+      entry.reOpened.count = entry.reOpened.count ? entry.reOpened.count + 1 : 1;
+      statistics[lastClosedJournal.user.name] = entry;
+    });
+  };
   return Promise.try(function() {
     _calculateDevelopedStats();
     _calculateClosedStats();
