@@ -171,10 +171,10 @@ var _createCharts = function(statistics, period) {
       },
       reOpened: {
         x: _.pluck(statistics, 'author'),
-        y: _.pluck(statistics, 'closed'),
+        y: _.pluck(statistics, 'reOpened'),
         type: 'bar',
         file: 'pireopened.png',
-        title: 'Tickets ReOpened'
+        title: 'Your ReOpened Tickets'
       }
     };
     var charts = _.map(_.keys(chartData), function(key) {
