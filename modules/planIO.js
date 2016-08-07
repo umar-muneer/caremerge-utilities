@@ -142,14 +142,36 @@ var _calculate = function(period, issues, issueStatuses) {
               });
           }) && getDateObject(dj.created_on).unix() === maxDeployedTime;
       });
-      if (!deployedJournal)
+
+      //if no deployed journal is found, check whether the issue was created with the deployed status or not
+      //this corresponds to checking the old status of the first journal and if there is no journal attached
+      //then just check the status of the issue.
+
+      var wasFirstJournalAlreadyDeployed = function() {
+        var firstJournal = _.first(journalsInDateRange);
+        return _.filter(firstJournal.details, function(detail) {
+          return detail.name === 'status_id' && detail.old_value == issueStatuses.Deployed.id
+        }).length === 1;
+      };
+      var issueDeployerName = ''
+      if (deployedJournal) {
+        issueDeployerName = deployedJournal.user.name;
+      }
+      else if (!deployedJournal && _.first(journalsInDateRange) && wasFirstJournalAlreadyDeployed()) {
+          issueDeployerName = _.first(journalsInDateRange).user.name;
+      }
+      else if (!deployedJournal && journalsInDateRange.length === 0 && issue.status.id === issueStatuses.Developed.id) {
+        issueDeployerName = issue.author.name;
+      }
+      else {
         return;
-      var entry = statistics[deployedJournal.user.name] || {};
+      }
+      var entry = statistics[issueDeployerName] || {};
       entry.deployed = entry.deployed || {};
       entry.deployed.count = entry.deployed.count ? entry.deployed.count + 1 : 1;
       entry.deployed.issues = entry.deployed.issues || [];
       entry.deployed.issues.push(issue.id);
-      statistics[deployedJournal.user.name] = entry;
+      statistics[issueDeployerName] = entry;
     });
   };
   var _calculateClosedStats = function() {
@@ -182,11 +204,7 @@ var _calculate = function(period, issues, issueStatuses) {
     });
   };
   var _calculateReopenStats = function() {
-    var reOpenedIssues = _.filter(issues, function(issue) {
-      return issue.status.id === issueStatuses.ReOpen.id;
-    });
     console.log(_.pluck(reOpenedIssues, 'id'));
-    console.log(reOpenedIssues.length,'!!!!!');
     //find whoever developed the ticket last.
     //add to his reopened count
     _.each(reOpenedIssues, function(issue) {
@@ -216,7 +234,7 @@ var _calculate = function(period, issues, issueStatuses) {
     _calculateDevelopedStats();
     _calculateClosedStats();
     _calculateDeployedStats();
-    _calculateReopenStats();
+    //_calculateReopenStats();
 
     return _.map(_.keys(statistics), function(author) {
       var authorData = statistics[author];
