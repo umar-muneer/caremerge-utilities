@@ -87,14 +87,35 @@ var _calculate = function(period, issues, issueStatuses) {
             });
         }) && getDateObject(dj.created_on).unix() === maxDevelopedTime;
       });
-      if (!developedJournal)
+      //if no developed journal is found, check whether the issue was created with the developed status or not
+      //this corresponds to checking the old status of the first journal and if there is no journal attached
+      //then just check the status of the issue.
+
+      var wasFirstJournalAlreadyDeveloped = function() {
+        var firstJournal = _.first(journalsInDateRange);
+        return _.filter(firstJournal.details, function(detail) {
+          return detail.name === 'status_id' && detail.old_value == issueStatuses.Developed.id
+        }).length === 1;
+      };
+      var issueDeveloperName = ''
+      if (developedJournal) {
+        issueDeveloperName = developedJournal.user.name;
+      }
+      else if (!developedJournal && _.first(journalsInDateRange) && wasFirstJournalAlreadyDeveloped()) {
+          issueDeveloperName = _.first(journalsInDateRange).user.name;
+      }
+      else if (!developedJournal && journalsInDateRange.length === 0 && issue.status.id === issueStatuses.Developed.id) {
+        issueDeveloperName = issue.author.name;
+      }
+      else {
         return;
-      var entry = statistics[developedJournal.user.name] || {};
+      }
+      var entry = statistics[issueDeveloperName] || {};
       entry.developed = entry.developed || {};
       entry.developed.count = entry.developed.count ? entry.developed.count + 1 : 1;
       entry.developed.issues = entry.developed.issues || [];
       entry.developed.issues.push(issue.id);
-      statistics[developedJournal.user.name] = entry;
+      statistics[issueDeveloperName] = entry;
     });
   };
   var _calculateDeployedStats = function() {
@@ -164,20 +185,38 @@ var _calculate = function(period, issues, issueStatuses) {
     var reOpenedIssues = _.filter(issues, function(issue) {
       return issue.status.id === issueStatuses.ReOpen.id;
     });
-    _.each(reOpenedIssues, function(reOpenedIssue) {
-      var entry = statistics[reOpenedIssue.assigned_to.name] || {};
-      entry.reOpened = entry.reOpened || {};
-      entry.reOpened.issues = entry.reOpened.issues || [];
+    console.log(_.pluck(reOpenedIssues, 'id'));
+    console.log(reOpenedIssues.length,'!!!!!');
+    //find whoever developed the ticket last.
+    //add to his reopened count
+    _.each(reOpenedIssues, function(issue) {
+      var developedJournals = _.filter(issue.journals, function(ij) {
+        return _.filter(ij.details, function(ijd) {
+          return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Developed.id;
+        }).length;
+      });
+      var maxDevelopedTime = getDateObject(_.max(developedJournals, function(journal) {
+        return getDateObject(journal.created_on).unix();
+      }).created_on).unix();
+
+      var developedJournal = _.find(developedJournals, function(dj) {
+        getDateObject(dj.created_on).unix() === maxDevelopedTime;
+      });
+      if (!developedJournal)
+        return;
+      var entry = statistics[developedJournal.user.name] || {};
+      entry.reOpened = entry.closed || {};
+      entry.closed.issues = entry.reOpened.issues || [];
       entry.reOpened.issues.push(issue.id);
       entry.reOpened.count = entry.reOpened.count ? entry.reOpened.count + 1 : 1;
-      statistics[reOpenedIssue.assigned_to.name] = entry;
+      statistics[developedJournal.user.name] = entry;
     });
   };
   return Promise.try(function() {
     _calculateDevelopedStats();
     _calculateClosedStats();
     _calculateDeployedStats();
-
+    _calculateReopenStats();
 
     return _.map(_.keys(statistics), function(author) {
       var authorData = statistics[author];
