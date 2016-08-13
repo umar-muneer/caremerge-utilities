@@ -204,10 +204,9 @@ var _calculate = function(period, issues, issueStatuses) {
     });
   };
   var _calculateReopenStats = function() {
-    console.log(_.pluck(reOpenedIssues, 'id'));
     //find whoever developed the ticket last.
     //add to his reopened count
-    _.each(reOpenedIssues, function(issue) {
+    _.each(issues, function(issue) {
       var developedJournals = _.filter(issue.journals, function(ij) {
         return _.filter(ij.details, function(ijd) {
           return ijd.name === 'status_id' && ijd.new_value == issueStatuses.Developed.id;
@@ -220,8 +219,29 @@ var _calculate = function(period, issues, issueStatuses) {
       var developedJournal = _.find(developedJournals, function(dj) {
         getDateObject(dj.created_on).unix() === maxDevelopedTime;
       });
-      if (!developedJournal)
+      //if no developed journal is found, check whether the issue was created with the developed status or not
+      //this corresponds to checking the old status of the first journal and if there is no journal attached
+      //then just check the status of the issue.
+
+      var wasFirstJournalAlreadyDeveloped = function() {
+        var firstJournal = _.first(journalsInDateRange);
+        return _.filter(firstJournal.details, function(detail) {
+          return detail.name === 'status_id' && detail.old_value == issueStatuses.Developed.id
+        }).length === 1;
+      };
+      var issueDeveloperName = ''
+      if (developedJournal) {
+        issueDeveloperName = developedJournal.user.name;
+      }
+      else if (!developedJournal && _.first(journalsInDateRange) && wasFirstJournalAlreadyDeveloped()) {
+          issueDeveloperName = _.first(journalsInDateRange).user.name;
+      }
+      else if (!developedJournal && journalsInDateRange.length === 0 && issue.status.id === issueStatuses.Developed.id) {
+        issueDeveloperName = issue.author.name;
+      }
+      else {
         return;
+      }
       var entry = statistics[developedJournal.user.name] || {};
       entry.reOpened = entry.closed || {};
       entry.closed.issues = entry.reOpened.issues || [];
