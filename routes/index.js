@@ -8,6 +8,7 @@ var fs = require('fs');
 var mailgun = require('mailgun-js');
 var moment = require('moment');
 var inflection = require('inflection');
+var Logger = require('le_node');
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -193,5 +194,11 @@ router.get('/statistics-planio', function(req, res) {
   }).catch(function(error) {
     console.log(error.stack ? error.stack : error);
   });
+});
+router.get('/error-test', function(req, res) {
+  var log = new Logger({
+    token: 'da74dc26-af4b-45e0-a9af-42f916e5d69b'
+  });
+  log.crit('pr-error-has-occurred');
 });
 module.exports = router;
