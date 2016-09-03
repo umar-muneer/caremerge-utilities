@@ -199,6 +199,7 @@ router.get('/error-test', function(req, res) {
   var log = new Logger({
     token: 'da74dc26-af4b-45e0-a9af-42f916e5d69b'
   });
-  log.crit('pr-error-has-occurred');
+  log.crit('pr-error-has-occurred', new Error(' an error has occurred'));
+  res.json({});
 });
 module.exports = router;
