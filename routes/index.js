@@ -8,7 +8,6 @@ var fs = require('fs');
 var mailgun = require('mailgun-js');
 var moment = require('moment');
 var inflection = require('inflection');
-var Logger = require('le_node');
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -159,6 +158,8 @@ router.get('/statistics', function(req,res) {
     console.log('sending results email');
   }).catch(function(error) {
     console.log(error.stack ? error.stack : error);
+    App.log.crit(error.stack ? error.stack : error);
+    App.log.crit('git-report-error-has-occurred');
   });
 });
 /*
@@ -193,13 +194,13 @@ router.get('/statistics-planio', function(req, res) {
     return sendEmail(req.query.emailRecipient, this.emailAttachments, duration);
   }).catch(function(error) {
     console.log(error.stack ? error.stack : error);
+    App.log.crit(error.stack ? error.stack : error);
+    App.log.crit('planio-error-has-occurred')
   });
 });
+
 router.get('/error-test', function(req, res) {
-  var log = new Logger({
-    token: process.env.LOG_ENTRIES_TOKEN
-  });
-  log.crit('pr-error-has-occurred');
-  res.json({});
+  App.log.crit('an error has occurred');
+  App.log.crit('planio-error-has-occurred');
 });
 module.exports = router;

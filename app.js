@@ -8,6 +8,7 @@ var http = require('http');
 var routes = require('./routes/index');
 var timeout = require('connect-timeout');
 var app = express();
+var Logger = require('le_node');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -68,6 +69,9 @@ App.baseUrl = 'https://api.github.com';
 App.planIOUrl = 'https://hfp.plan.io';
 App.models = require('./models');
 App.modules = require('./modules');
+App.log = new Logger({
+  token: process.env.LOG_ENTRIES_TOKEN
+});
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 

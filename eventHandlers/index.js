@@ -68,7 +68,9 @@ module.exports.handlePushEvent = function(payload) {
     console.log('data successfully inserted in db');
   }).catch(function(error) {
     console.log('####', error, '####');
-  });  
+    App.log.crit('####', error, '####');
+    App.log.crit('push-error-has-occurred');
+  });
 };
 
 module.exports.handlePullRequestEvent = function(payload) {
@@ -82,6 +84,8 @@ module.exports.handlePullRequestEvent = function(payload) {
     console.log('data successfully inserted in db');
   }).catch(function(error) {
     console.log('####', error, '####');
+    App.log.crit('####', error, '####');
+    App.log.crit('pr-error-has-occurred');
   });
 };
 
