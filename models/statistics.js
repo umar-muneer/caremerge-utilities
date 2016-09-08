@@ -25,6 +25,20 @@ module.exports = function(sequelize, DataTypes) {
                   return team.id;
                 });
       },
+      getAuthenticatedRepos: function() {
+        return request(urlJoin(App.baseUrl, 'user', 'repos'))
+          .query({
+            access_token: process.env.GIT_ACCESS_TOKEN,
+            per_page: 100
+          })
+          .endAsync()
+          .then(function (response) {
+            return _.reduce(response.body, function(result, repo) {
+              result[repo.id] = _.pick(repo, 'id', 'name');
+              return result;
+            }, {});
+          });
+      },
       getMemberName: function(memberLogin) {
         return request(urlJoin(App.baseUrl, 'users', memberLogin))
           .query({access_token: process.env.GIT_ACCESS_TOKEN})
@@ -35,7 +49,7 @@ module.exports = function(sequelize, DataTypes) {
       },
       getTeamMembers: function(organization, teamName) {
         return Promise.bind(this).then(function() {
-          return this.getCaremergeTeamId(organization, teamName); 
+          return this.getCaremergeTeamId(organization, teamName);
         }).then(function(teamId) {
           return request(urlJoin(App.baseUrl, 'teams', teamId, 'members'))
             .query({access_token: process.env.GIT_ACCESS_TOKEN, per_page:100})
