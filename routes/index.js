@@ -32,7 +32,7 @@ router.post('/githooks/dump', function(req,res) {
   });
 
 });
-var sendEmail = function(recipient, attachments, duration) {
+var sendEmail = function(recipient, attachments, duration, ccRecipient) {
   var mailer = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
   var attachmentPromises = _.map(attachments, function(chartName) {
     return new Promise(function(resolve, reject) {
@@ -48,7 +48,7 @@ var sendEmail = function(recipient, attachments, duration) {
   return Promise.all(attachmentPromises).then(function(attachments) {
     var fromDate = moment(duration.fromDate).format('DD-MMM-YYYY');
     var toDate = moment(duration.toDate).format('DD-MMM-YYYY');
-    var subject = inflection.capitalize(duration.title) + ' Stats: ' + fromDate + ' to ' + toDate
+    var subject = inflection.capitalize(duration.title) + ' Stats: ' + fromDate + ' to ' + toDate;
     var data = {
       from: process.env.CM_EMAIL_SENDER,
       to: recipient || process.env.CM_EMAIL_RECIPIENT,
@@ -56,6 +56,9 @@ var sendEmail = function(recipient, attachments, duration) {
       text: 'Developer statistics for the given period',
       attachment: attachments
     };
+    if(!_.undefined(ccRecipient)){
+      data.cc = CM_EMAIL_CC_RECIPIENT;
+    }
     return mailer.messages().send(data);
   });
 };
@@ -153,7 +156,7 @@ router.get('/statistics', function(req,res) {
       return Promise.resolve({});
     if (!_.isEmpty(csvFile))
       this.emailAttachments.push(csvFile);
-    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration);
+    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration, req.query.cc);
   }).then(function() {
     console.log('sending results email');
   }).catch(function(error) {
@@ -191,7 +194,7 @@ router.get('/statistics-planio', function(req, res) {
   }).then(function(csvFile) {
     if (!_.isEmpty(csvFile))
       this.emailAttachments.push(csvFile);
-    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration);
+    return sendEmail(req.query.emailRecipient, this.emailAttachments, duration, req.query.cc);
   }).catch(function(error) {
     console.log(error.stack ? error.stack : error);
     App.log.crit(error.stack ? error.stack : error);
