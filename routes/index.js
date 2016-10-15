@@ -57,7 +57,7 @@ var sendEmail = function(recipient, attachments, duration, ccRecipient) {
       attachment: attachments
     };
     if(!_.undefined(ccRecipient)){
-      data.cc = CM_EMAIL_CC_RECIPIENT;
+      data.cc = process.env.CM_EMAIL_CC_RECIPIENT;
     }
     return mailer.messages().send(data);
   });
