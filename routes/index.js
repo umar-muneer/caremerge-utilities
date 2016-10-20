@@ -54,11 +54,10 @@ var sendEmail = function(recipient, attachments, duration, ccRecipient) {
       to: recipient || process.env.CM_EMAIL_RECIPIENT,
       subject: subject,
       text: 'Developer statistics for the given period',
-      attachment: attachments
+      attachment: attachments,
+      cc: ccRecipient || process.env.CM_EMAIL_CC_RECIPIENT
     };
-    if(typeof ccRecipient != 'undefined'){
-      data.cc = ccRecipient;
-    }
+    
     return mailer.messages().send(data);
   });
 };
