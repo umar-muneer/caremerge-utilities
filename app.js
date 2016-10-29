@@ -67,6 +67,7 @@ http.globalAgent.maxSockets = 50;
 App = {};
 App.baseUrl = 'https://api.github.com';
 App.planIOUrl = 'https://hfp.plan.io';
+App.jiraAPIUrl = 'https://careaxiom.atlassian.net/rest/api/2';
 App.models = require('./models');
 App.modules = require('./modules');
 App.log = new Logger({

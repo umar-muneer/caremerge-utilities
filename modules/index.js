@@ -3,3 +3,4 @@
  */
 module.exports.output =  require('./output');
 module.exports.planIO = require('./planIO');
+module.exports.Jira = require('./jira');
