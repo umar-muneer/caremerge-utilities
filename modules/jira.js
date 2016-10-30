@@ -3,24 +3,31 @@ var request = Promise.promisifyAll(require('superagent'));
 var urlJoin = require('url-join');
 var _ = require('lodash');
 
-var _getDevInProgressIssues = function(userIDs) {
-	var jql = 'status changed to "Dev In Progress" <%=userID%> during(startOfWeek(),endOfWeek())';
-	var url = urlJoin(App.jiraAPIUrl, 'search')
-	
-	return Promise.map(userIDs).then(function(userID) {
-		return request.get(url)
-		.set('Authorization', 'Basic ' + process.env.JIRA_BASIC_AUTHORIZATION_TOKEN)
-		.set('Content-Type', 'application/json')
-		.query({
-			startAt: 0,
-			maxResults: 100,
-			jql: jql
-		});
-	}).then(function(issues) {
-		console.log(issues);
-		return issues;
+var _getDevInProgressIssuesForUser = function(userName) {
+	console.log('-----retrieving dev in progress issues for user name -> ', userName, '---------------');
+	const JQL_TEMPLATE = 'status changed to "Dev In Progress" by "<%=userName%>" during(startOfWeek(),endOfWeek())';
+	var url = urlJoin(App.jiraAPIUrl, 'search');
+	var jql = _.template(JQL_TEMPLATE)({
+		userName: userName
 	});
-	
+	return request.get(url)
+	.set('Authorization', 'Basic ' + process.env.JIRA_BASIC_AUTHORIZATION_TOKEN)
+	.set('Content-Type', 'application/json')
+	.query({
+		startAt: 0,
+		maxResults: 100,
+		jql: jql,
+		fields: []
+	})
+	.endAsync()
+	.then(function(response) {
+		console.log('-------retrieved dev in progress issues for user name -> ', userName, '----------');
+		return response.body;
+	})
+	.catch(function(error) {
+		console.log('error retrieving stats for user name -> ', userName);
+		throw error;
+	});
 };
 
 var _getReadyForQAIssues = function(userIDs) {
@@ -30,6 +37,7 @@ var _getReadyForQAIssues = function(userIDs) {
 
 var _getUsers = function() {
 	var url = urlJoin(App.jiraAPIUrl, 'user', 'search');
+	console.log('----retrieving active users-----');
 	return request.get(url)
 		.set('Authorization', 'Basic ' + process.env.JIRA_BASIC_AUTHORIZATION_TOKEN)
 		.set('Content-Type', 'application/json')
@@ -40,14 +48,29 @@ var _getUsers = function() {
 		})
 		.endAsync()
 		.then(function(response) {
-			console.log('retrieved user list for jira stats');
+			console.log('-----retrieved active users-----')
 			return response.body;
 		});
 };
 
 module.exports.calculate = function() {
 	return _getUsers().then(function(users) {
-		var userKeys = _.pluck(users, 'key');
-		return _getDevInProgressIssues(userKeys);
+		var userNames = _.chain(users)
+										.pluck('name')
+										.reject(function(key) {
+											return key.indexOf('addon') !== -1;
+										})
+										.value();
+		return Promise.bind({}).then(function() {
+			return Promise.map(userNames, function(userName) {
+				return _getDevInProgressIssuesForUser(userName);
+			});
+		}).reduce(function(output, issuePerUser, index) {
+			output[userNames[index]] = issuePerUser.total;
+			return output;
+		},[]).then(function(result) {
+			this.devInProgressIssuesPerUser = result;
+			console.log('dev in progress issues are -> ', this.devInProgressIssuesPerUser);
+		});
 	});
 };
