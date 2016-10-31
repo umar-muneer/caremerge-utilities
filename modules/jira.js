@@ -5,7 +5,7 @@ var _ = require('lodash');
 
 var _getDevInProgressIssuesForUser = function(userName) {
 	console.log('-----retrieving dev in progress issues for user name -> ', userName, '---------------');
-	const JQL_TEMPLATE = 'status changed to "Dev In Progress" by "<%=userName%>" during(startOfWeek(),endOfWeek())';
+	var JQL_TEMPLATE = 'status changed to "Dev In Progress" by "<%=userName%>" during(startOfWeek(),endOfWeek())';
 	var url = urlJoin(App.jiraAPIUrl, 'search');
 	var jql = _.template(JQL_TEMPLATE)({
 		userName: userName
