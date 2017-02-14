@@ -119,7 +119,7 @@ var _mapEmployeeNames = function(stats) {
 };
 
 var filterBlackList = function(statistics) {
-  var blackList = ['ashhar-saeed', 'gerrymiller', 'fahad-aziz', 'Raziah'];
+  var blackList = ['ashhar-saeed', 'gerrymiller', 'fahad-aziz', 'Raziah', 'automationbuddy'];
   return _.filter(statistics, function(stat) {
     return !_.contains(blackList, stat.author);
   });
