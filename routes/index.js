@@ -194,10 +194,22 @@ router.get('/statistics-planio', function(req, res) {
     if (!_.isEmpty(csvFile))
       this.emailAttachments.push(csvFile);
     return sendEmail(req.query.emailRecipient, this.emailAttachments, duration, req.query.cc);
-  }).catch(function(error) {
+  }).catch(function(error) {    
     console.log(error.stack ? error.stack : error);
     App.log.crit(error.stack ? error.stack : error);
     App.log.crit('planio-error-has-occurred')
+  });
+});
+
+router.get('/statistics/jira', function(req, res) {
+  return Promise.bind({}).then(function() {
+    res.json('your request is being processed');
+    return App.modules.Jira.calculate();
+  }).catch(function(error) {
+    var errorString = error.stack ? error.stack : error;
+    console.log(errorString);
+    App.log.crit(errorString);
+    App.log.crit('jira-error-has-occurred')
   });
 });
 
